@@ -1,6 +1,6 @@
 package org.retorn.lifeinspace.tech;
 
-import org.retorn.lifeinspace.Main;
+import org.retorn.lifeinspace.level.Main;
 
 
 public class RTimerLoaded {

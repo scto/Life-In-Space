@@ -2,9 +2,10 @@ package org.retorn.lifeinspace.android;
 
 import android.os.Bundle;
 
+import org.retorn.lifeinspace.level.Main;
+
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
-import org.retorn.lifeinspace.Main;
 
 public class AndroidLauncher extends AndroidApplication {
 	@Override
