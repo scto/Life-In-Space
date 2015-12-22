@@ -1,8 +1,7 @@
-package org.retorn.lifeinspace.util;
-
-import org.retorn.lifeinspace.level.Main;
+package org.retorn.lifeinspace.engine;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Application.ApplicationType;
 import com.badlogic.gdx.Input.Buttons;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputAdapter;
@@ -13,8 +12,8 @@ import com.badlogic.gdx.math.Vector3;
 public class InputManager extends InputAdapter{
 	public static boolean  pressedKey, pressedBackspace, pressedNum0, pressedNum1, pressedNum2, pressedNum3, pressedNum4, pressedNum5, pressedNum6, pressedNum7, pressedNum8, pressedNum9, pressedR, pressedLShift, pressedF, pressedE, pressedQ, pressedSpace, pressedEnter, pressedEscape, pressedTab, pressedW, pressedA, pressedS, pressedD, pressedI, pressedK, pressedJ, pressedL, pressedUp, pressedDown, pressedLeft, pressedRight, pressedF11, pressedF1, pressedF2, pressedF3, pressedF4;
 	public static boolean downRControl, downLControl, downBackspace, downU, downC, downK, downN, downG, downI, downNum0, downNum1, downNum5, downDNorth, downDEast, downDSouth, downDWest, downR, downF3, downF, downSpace, downLShift, downRShift, downW, downD, downS, downA, downUp,  downRight,  downLeft, downDown, downQ, downE, downNum2, downNum4, downNum6, downNum7, downNum8, downNum9;
-	public static boolean pressedMenu, pressedBack, pressedMainB, pressedRMB, pressedMMB, downMainB, downRMB, downMMB; 
-	public static boolean upMainB;
+	public static boolean pressedMenu, pressedBack, pressedLMB, pressedRMB, pressedMMB, downLMB, downRMB, downMMB; 
+	public static boolean upLMB;
 	public static int scroll;
 	public static Vector2 M, T, deltaM, prevM, deltaDrag, prevDrag;//T = touch. Updated when touchDown.
 	
@@ -40,8 +39,8 @@ public class InputManager extends InputAdapter{
 		if(pointer == 0)
 			prevDrag.set(screenX, screenY);
 		if(button == Buttons.LEFT && pointer == 0){
-			downMainB = true; pressedMainB = true;
-			M.set(Gdx.input.getX(), Main.HEIGHT-Gdx.input.getY());
+			downLMB = true; pressedLMB = true;
+			M.set(Gdx.input.getX(), LM.HEIGHT-Gdx.input.getY());
 		}
 		if(button == Buttons.RIGHT){downRMB = true; pressedRMB = true;}
 		if(button == Buttons.MIDDLE){downMMB = true; pressedMMB = true;}
@@ -56,7 +55,7 @@ public class InputManager extends InputAdapter{
 			prevDrag.set(0,0);
 			deltaDrag.set(0,0);
 		}
-		if(button == Buttons.LEFT && pointer == 0){downMainB = false; upMainB = true;}
+		if(button == Buttons.LEFT && pointer == 0){downLMB = false; upLMB = true;}
 		if(button == Buttons.RIGHT){downRMB = false;}
 		if(button == Buttons.MIDDLE){downMMB = false;}
 		return super.touchUp(screenX, screenY, pointer, button);
@@ -174,7 +173,7 @@ public class InputManager extends InputAdapter{
 		return super.keyUp(keycode);
 	}
 	
-	//Called at the end of the tick method in LeveMainanager to assure that they are only "pressed" for one frame, until they are pressed again.
+	//Called at the end of the tick method in LevelManager to assure that they are only "pressed" for one frame, until they are pressed again.
 	public static void resetPress(){
 		pressedSpace = false;
 		pressedEnter = false;
@@ -213,7 +212,7 @@ public class InputManager extends InputAdapter{
 		pressedNum8 = false;
 		pressedNum9 = false;
 		
-		pressedMainB = false;
+		pressedLMB = false;
 		pressedRMB = false;
 		pressedMMB = false;
 
@@ -223,12 +222,12 @@ public class InputManager extends InputAdapter{
 		pressedKey = false;
 		
 		
-		upMainB = false;
+		upLMB = false;
 		
 		charWasTyped = false;
 		
 		scroll = 0;
-		M.set(Gdx.input.getX(), Main.HEIGHT-Gdx.input.getY());
+		M.set(Gdx.input.getX(), LM.HEIGHT-Gdx.input.getY());
 		prevM.set(M);
 		deltaDrag.setZero();
 		deltaM.setZero();
@@ -237,8 +236,8 @@ public class InputManager extends InputAdapter{
 		downTypedBackspace = false;
 		
 		if(downBackspace){
-			initialBackspaceTime += Main.delta;
-			backspaceTime += Main.delta;
+			initialBackspaceTime += LM.delta;
+			backspaceTime += LM.delta;
 			if(initialBackspaceTime > 0.15f && backspaceTime > 0.06f){ downTypedBackspace = true; backspaceTime = 0f;}
 		}
 		
@@ -286,15 +285,15 @@ public class InputManager extends InputAdapter{
 
 	//Unprojects that shit into the camera.
 	public static Vector2 getWorldMouse(OrthographicCamera defaultCam){
-		M.set(Gdx.input.getX(), Main.HEIGHT-Gdx.input.getY());
-		Vector3 unproj = defaultCam.unproject(new Vector3(M.x, Main.HEIGHT-M.y, 0));
+		M.set(Gdx.input.getX(), LM.HEIGHT-Gdx.input.getY());
+		Vector3 unproj = defaultCam.unproject(new Vector3(M.x, LM.HEIGHT-M.y, 0));
 		return new Vector2(unproj.x, unproj.y);
 	}
 
 
 	@Override
 	public boolean mouseMoved(int screenX, int screenY) {
-		deltaM.set((float)screenX-prevM.x, (Main.HEIGHT-prevM.y)-(float)screenY);
+		deltaM.set((float)screenX-prevM.x, (LM.HEIGHT-prevM.y)-(float)screenY);
 		return super.mouseMoved(screenX, screenY);
 	}
 	

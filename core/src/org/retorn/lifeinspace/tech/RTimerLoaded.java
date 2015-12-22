@@ -1,6 +1,6 @@
 package org.retorn.lifeinspace.tech;
 
-import org.retorn.lifeinspace.level.Main;
+import org.retorn.lifeinspace.engine.LM;
 
 
 public class RTimerLoaded {
@@ -13,5 +13,5 @@ public class RTimerLoaded {
 		t = time;
 	}
 	
-	public void tick(){inc += Main.delta;}
+	public void tick(){inc += LM.delta;}
 }

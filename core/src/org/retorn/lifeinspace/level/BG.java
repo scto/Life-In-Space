@@ -18,5 +18,9 @@ public class BG {
 	public void render(){
 		
 	}
+	
+	public static void setTarg(String s){
+		tCol = Color.valueOf(s);
+	}
 
 }
