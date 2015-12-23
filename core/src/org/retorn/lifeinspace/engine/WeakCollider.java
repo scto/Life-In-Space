@@ -167,7 +167,6 @@ public abstract class WeakCollider extends Entity {
 		
 	}
 	
-	//TAKEN FROM GHOST HOLE. SHOULD KEEP YOU IN THE SAME PLACE WHEN YOU JUMP.
 	@Override
 	public void removeVa(){
 		if(!jumped){
@@ -182,5 +181,3 @@ public abstract class WeakCollider extends Entity {
 	}
 	
 }
-
-//Weak colliders get pushed around by hard colliders and awkwardly have to shuffle around other weak colliders.

@@ -302,103 +302,6 @@ public abstract class Level{
 		
 	}
 	
-	/*public LinkedList<Entity> getSortedRenderables(){
-		masterList.clear();//Everything that is relevant/must render (unless covered up by something else entirely? Probably not?)
-		sortedZList.clear();
-		sortedYList.clear();
-		sortedList.clear();
-		
-		//Adding only entities that will render/in frustum+are rendering to the masterList.
-		LM.batch.end();//Ending the batch so it can be opened in the individual superRenders.
-		for(Entity e: eList.values()){
-			if(e.rendering &&
-			isEntityWithinViewFrustum(e))
-				masterList.add(e);
-			if(e.superRender) e.superRender(this);
-		}
-		
-		LM.batch.begin();
-		//Creating Sorted Z List.
-		zTakeable.clear();//For sortedZList to cannibalize.
-		zTakeable.addAll(masterList);
-		while(sortedZList.size() != masterList.size()){
-			Entity lo;//Lowest z-entity, nigga. get on my lev.
-			lo = zTakeable.get(0);
-			for(Entity e: zTakeable){
-				if(!e.equals(lo)){
-					if(e.pos.z >= lo.pos.z + lo.dim.z)//Lo is definitively in front of this new entity.
-						lo = e;//The new entity is the new lo.
-					else if(e.dim.y < lo.dim.y && (e.pos.z <= lo.pos.z + lo.dim.z) && e.pos.y < lo.pos.y+lo.dim.y && e.pos.z + e.dim.z > lo.pos.z)
-						lo = e;
-				}
-			}
-			sortedZList.add(lo);
-			zTakeable.remove(lo);
-		}
-		
-		//Sorted Z List is complete. Let's make sorted Y List now.
-		yTakeable.clear();
-		yTakeable.addAll(masterList);
-		while(sortedYList.size() != masterList.size()){
-			Entity lo;//Lowest z-entity, nigga. get on my lev.
-			lo = yTakeable.get(0);
-			for(Entity e: yTakeable){
-				if(!e.equals(lo)){
-					if(e.pos.y + e.dim.y <= lo.pos.y)//Lo is definitively underneath this new entity.
-						lo = e;//The new entity is the new lo.
-				}
-			}
-			sortedYList.add(lo);
-			yTakeable.remove(lo);
-		}
-		
-		//SORTING OF GODS WITH BOTH LISTS.
-		while(sortedList.size() != masterList.size()){
-		Entity loGod = sortedZList.get(0);
-				//If e is the lowest on both lists, it is definitely the loGod.
-				if(sortedYList.get(0).equals(loGod)){
-					
-				}
-				//If e is higher on one list than another
-				else{
-					Entity forComp = loGod;
-					int loGodIndex = sortedYList.indexOf(loGod);
-					for(int i = loGodIndex-1; i >= 0; i--){
-						Entity lowerY = sortedYList.get(i); //outPrint(forComp.name +"/" +lowerY.name);
-						if(lowerY.pos.z >= forComp.pos.z + forComp.dim.z && forComp.pos.y + forComp.dim.y >= lowerY.pos.y && forComp.pos.y <= lowerY.pos.y + lowerY.dim.y ){
-							//outPrint(forComp.name +" was in front of "+lowerY.name); 
-							forComp = lowerY;}
-						//If this entity is lower, and the forComp is not completely behind it, it is considered lower.
-						if(lowerY.pos.y + lowerY.dim.y <= forComp.pos.y && forComp.pos.z + forComp.dim.z >= lowerY.pos.z && forComp.pos.z <= lowerY.pos.z + lowerY.dim.z){
-							//outPrint(forComp.name +" was on top of "+lowerY.name);
-							forComp = lowerY;}
-					}
-					loGod = forComp; //outPrint("loGod is now "+forComp.name +" which has been added to sortedList.");
-					
-					forComp = loGod;
-					loGodIndex = sortedZList.indexOf(loGod);
-					for(int i = loGodIndex-1; i >= 0; i--){
-						Entity lowerY = sortedZList.get(i);// outPrint(forComp.name +"/" +lowerY.name);
-						if(lowerY.pos.z >= forComp.pos.z + forComp.dim.z && forComp.pos.y + forComp.dim.y >= lowerY.pos.y && forComp.pos.y <= lowerY.pos.y + lowerY.dim.y ){
-							//outPrint(forComp.name +" was in front of "+lowerY.name); 
-							forComp = lowerY;}
-					}
-					loGod = forComp; //outPrint("loGod is now "+forComp.name +" which has been added to sortedList.");
-					}
-		sortedList.add(loGod);
-		//finalList = "new sorted:"; for(Entity e: sortedList){finalList += e.name+" ";}
-		//outPrint(finalList);
-		sortedZList.remove(loGod);
-		sortedYList.remove(loGod);
-		}
-		sortedZList.clear();
-		sortedYList.clear();
-		
-		//String finalList = "SORTED:"; for(Entity e: sortedList){finalList += e.name+" ";}
-		//outPrint(finalList+"\n");
-		return sortedList;
-	}*/
-	
 	public LinkedList<Entity> getSortedRenderables(){
 		masterList.clear();//Everything that is relevant/must render (unless covered up by something else entirely? Probably not?)
 		
@@ -455,38 +358,6 @@ public abstract class Level{
 		}
 		
 	}
-	
-	/*
-	public LinkedList<Entity> getSortedRenderables(){
-		sortedList.clear();
-		for(Entity e: eList.values()){
-			if(e.rendering &&
-			camList.get(camIndex).frustum.boundsInFrustum(new Vector3(e.getCenterPos().x, e.getCenterPos().y+e.getCenterPos().z, 0), new Vector3(e.dim.x, e.dim.y + e.dim.z, 0)))
-				sortedList.add(e);
-		}
-		Collections.sort(sortedList, new entSorter());
-		return sortedList;
-	}
-	
-	private class entSorter implements Comparator<Entity>{
-
-		@Override
-		public int compare(Entity a, Entity b) {
-			//Is something directly in front/behind something else?
-			if(a.pos.z >= b.pos.z+b.dim.z) return -1;
-			else if(a.pos.y+a.dim.y <= b.pos.y) return -1;
-			else if(a.pos.z + a.dim.z <= b.pos.z) return 1;
-			else if(a.pos.y >= b.pos.y + b.dim.y) return 1;
-			//The two things are beside each other.
-			else if(a.pos.y+a.dim.y <= b.pos.y+b.dim.y) return -1;
-			else if(a.pos.z >= b.pos.z) return -1;
-			else if(a.pos.y+a.dim.y >= b.pos.y+b.dim.y) return 1;
-			else if(a.pos.z <= b.pos.z) return 1;
-				
-			return 0;
-		}
-		
-	}*/
 	
 	public boolean isEntityWithinViewFrustum(Entity e){
 		if(camList.get(camIndex).frustum.boundsInFrustum(new Vector3(e.getCenterPos().x, e.getCenterPos().y+e.getCenterPos().z, 0), new Vector3(e.dim.x+20, e.dim.y + e.dim.z + 20, 0)))
@@ -716,9 +587,7 @@ public abstract class Level{
 			normaly = b1.getCenterPos().y < b2.getCenterPos().y ? 1f:-1f; 
 			return yCloseTime;}
 		//If xClose, yClose and zClose are all < 0, return 1f.
-		//If any fucking single thing is over 1, fuck off.
 		
-		//outPrint("\nPAST THE FIRST DEFENSE.\n");
 		//Resort to returning the highest number if somehow there are technically going to be two collisions.
 		//x collision
 		if((xCloseTime > zCloseTime || zCloseTime >= 1f) && (xCloseTime > yCloseTime || yCloseTime >= 1f) && xCloseTime < 1 && xCloseTime > 0 && xClose > 0){
@@ -735,10 +604,6 @@ public abstract class Level{
 			normaly = b1.getCenterPos().y < b2.getCenterPos().y ? 1f:-1f; 
 			return yCloseTime;
 		}
-		/*
-		outPrint("Name1:"+b1.name +" Name2:"+b2.name);
-		outPrint("Made it through. xClose:"+xClose +" zClose:"+zClose +" yClose:"+yClose);
-		outPrint("Times x:"+xCloseTime +" z:"+zCloseTime +" y:"+yCloseTime +"\n");*/
 		return 1f;
 	}
 	
@@ -774,7 +639,7 @@ public abstract class Level{
 				q.remove();//Removes it from the pending List.
 			}
 		}
-	}//9DDB1
+	}
 	
 	//Returns current camera
 	public Camera getCam(){
@@ -803,16 +668,5 @@ public abstract class Level{
 		for(Entity e: eList.values()){e.dispose();}
 		eList.clear();
 	}
-	
-	
-	
-	
-	
-	
-	
-	//BLINDNESS IS VIRTUE
-	
-	
-	
 	
 }

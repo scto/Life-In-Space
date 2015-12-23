@@ -29,7 +29,6 @@ public abstract class Entity {
 	public ArrayList<String> scList;//Specific-Collide Groups-List.
 	
 	private float tweenSpeed;
-	private float tweenVar;//Used for the "tweenVar" method i.e. a type 3 tween.
 	
 	public Vector3 pos;
 	public Vector3 dim;
@@ -75,7 +74,7 @@ public abstract class Entity {
 	public abstract boolean doneLoad(Level lvl);
 	public abstract void dispose();
 	public abstract String getDebug();
-	//Checks if everything's loaded, then assigns variables if it is. 
+	//Done Load Checks if everything's loaded, then assigns variables if it is. 
 	//Doesn't matter if the entity is added on level-load because addPendingEnts isn't called until everything's loaded, however if this was added while a level was already loaded, this will assure it's assets are ready
 	//when it tries to make objects with them.
 	
@@ -153,7 +152,6 @@ public abstract class Entity {
 	
 	
 	public void tickMovement(){
-		//v.add(va);//Not sure why it wasn't like this before. Might have to change it back in WC collide method.
 		pos.x += v.x*LM.delta - vr.x/2*LM.delta;
 		pos.y += v.y*LM.delta - vr.y/2*LM.delta;
 		pos.z += v.z*LM.delta - vr.z/2*LM.delta;

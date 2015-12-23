@@ -17,9 +17,8 @@ public class DesktopLauncher {
 		config.title = "Life In Space Jam | RT";
 		config.width = 1280;
 		config.height = 720;
-		config.resizable = false;
 		
-		new LwjglApplication(new LM(config.width, config.height, Color.valueOf("000000"), false, "main", true,
+		new LwjglApplication(new LM(config.width, config.height, Color.valueOf("000000"), true, "main", false,
 				new Level[]{
 				new Main()
 		}){

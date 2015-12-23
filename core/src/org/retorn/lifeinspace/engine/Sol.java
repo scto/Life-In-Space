@@ -182,8 +182,12 @@ public class Sol extends HardCollider {
 		String pathPrefix = "shaders/";
 		
 		shadowShader = new ShaderProgram(Gdx.files.internal(pathPrefix+"SolShadow.vsh"), Gdx.files.internal(pathPrefix+"SolShadow.fsh"));
+			System.out.println("Shadow Shader Compiled: "+shadowShader.isCompiled() +shadowShader.getLog());
 		sideShadowShader = new ShaderProgram(Gdx.files.internal(pathPrefix+"SolSideShadow.vsh"), Gdx.files.internal(pathPrefix+"SolSideShadow.fsh"));
+			System.out.println("Side-Shadow Shader Compiled: "+sideShadowShader.isCompiled() +sideShadowShader.getLog());
 		sideBlankShader = new ShaderProgram(Gdx.files.internal(pathPrefix+"SolSideBlank.vsh"), Gdx.files.internal(pathPrefix+"SolSideBlank.fsh"));
+			System.out.println("Side-Blank Shader Compiled: "+sideBlankShader.isCompiled() +sideBlankShader.getLog());
+		
 	}
 
 	@Override

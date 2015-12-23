@@ -60,7 +60,7 @@ public abstract class LM extends ApplicationAdapter{
 	public static boolean loadingComplete;//This means everything is done loading in loader.
 	public static Level[] gameLevels;//Array containing every level in the whole dang game. Set up in Desktop Launcher, assigned in this constructor.
 	private static ArrayList<RTimerLoaded> timers;
-	private static boolean paused;//Whether or not this is paused. Controlled by lwjgl frame in desktopLauncher.
+	private static boolean paused;//Whether or not this is paused.
 	public static float delta;//Capped delta.
 	public static float endTime;//Delta*Gamespeed.
 	public static boolean fixedDim;//Whether or not the app stretches when resized.
@@ -84,9 +84,7 @@ public abstract class LM extends ApplicationAdapter{
 	}
 
 	public void create () {
-		//SM.file.delete();
 		new SM();
-		//outPrint("SaveManager set up!");
 		//Setting up loader + tParam.
 		loader = new AssetManager();
 		tParam = new TextureParameter();
@@ -114,12 +112,10 @@ public abstract class LM extends ApplicationAdapter{
 		batch = new SpriteBatch();
 		batch.enableBlending();
 		batch.setBlendFunction(Gdx.gl.GL_SRC_ALPHA, Gdx.gl.GL_ONE_MINUS_SRC_ALPHA);
-		//outPrint("SpriteBatch set up.");
+		
 		buffer = new FrameBuffer(Format.RGBA8888, 1920, 1080, false);
-		//outPrint("FrameBuffer set up.");
 		
 		gameSpeed = 1f; 
-		//outPrint("Game speed set to "+gameSpeed+".");
 		gameVolume = 1f;
 		gameSoundEffectVolume = 1f;
 		gameMusicVolume = 1f;
@@ -152,7 +148,6 @@ public abstract class LM extends ApplicationAdapter{
 		
 		fontShader = new ShaderProgram(Gdx.files.internal("shaders/font.vsh"), Gdx.files.internal("shaders/font.fsh"));	
 		
-		//outPrint("LM fontShader Compiled: "+fontShader.isCompiled());
 		if(!fontShader.isCompiled()) outPrint(fontShader.getLog());
 		
 		//Universal Shaders.
@@ -203,8 +198,6 @@ public abstract class LM extends ApplicationAdapter{
 	if(!paused){
 	if(loadingComplete && lvls.get(lvlID).inited && loadIntroDone){
 		//Make current buffer.
-		//buffer.begin();
-		//outPrint("\nMemory Used: "+(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())); 
 		Gdx.gl.glClearColor(lvls.get(lvlID).bg.r, lvls.get(lvlID).bg.g, lvls.get(lvlID).bg.b, 1f);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		
@@ -224,8 +217,6 @@ public abstract class LM extends ApplicationAdapter{
 			lvls.get(lvlID).renderDebug(0);
 			shaper.end();
 		}
-		//Unbind buffer
-		//buffer.end(0,0, WIDTH, HEIGHT);
 		batch.setProjectionMatrix(lvls.get(lvlID).camList.get(lvls.get(lvlID).camIndex).combined);
 		shaper.setProjectionMatrix(lvls.get(lvlID).camList.get(lvls.get(lvlID).camIndex).combined);
 	}
@@ -241,9 +232,6 @@ public abstract class LM extends ApplicationAdapter{
 		InputManager.resetPress();
 	}
 	else{
-		//outPrint("paused");
-		//if(InputManager.pressedSpace)
-		//	paused = false;
 		}
 	}
 	

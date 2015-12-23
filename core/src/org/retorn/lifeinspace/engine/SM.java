@@ -8,16 +8,6 @@ import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.JsonWriter.OutputType;
 
 public class SM {
-	//In general, here's the loop:
-	//Make new SaveManager, if there's no file make a new one with a blank save,
-	//If there is already a file, read the "save" from it and fill this save with that.
-	//During the game, if you want to modify the object map within save, you do that.
-	//When the file gets saved again (e.g. after you've modified save,) it rewrites the
-	//whole thing. Any time something is saved, that's just the entirety of the CURRENT
-	//save object-map being written to the file, in the form of a "save" object.
-	//ALL YOU EVER DO IS MODIFY THE SAVE OBJECT, NO INTERACTION WITH THE ACTUAL FILE
-	//IS HANDLED ANYWHERE ELSE BUT HERE! ALL YOU'RE CONCERNED ABOUT IS THIS OBJECT MAP
-	//INSIDE OF THE SAVE OBJECT.
 	public static FileHandle file = Gdx.files.local("save.json");//Where the file will be saved/what it's called.
 	public static FileHandle backupFile = Gdx.files.local("bsave.json");
 	public static Save save = new Save();//The thing that holds the object map with all the values. Will be filled if the file already has one saved in it.
