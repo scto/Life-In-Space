@@ -325,12 +325,11 @@ public abstract class Level{
 	private class entSorter implements Comparator<Entity>{
 
 		public int compare(Entity a, Entity b) {
-
-			if(b.pos.y + b.dim.y <= a.pos.y) return 1;
-			if(a.pos.z >= b.pos.z + b.dim.z) return -1;
+			
+			if(b.pos.y + b.dim.y <= a.pos.y)return 1;
 			if(a.pos.y + a.dim.y <= b.pos.y) return -1;
 			if(b.pos.z >= a.pos.z + a.dim.z) return 1;
-			
+			if(a.pos.z >= b.pos.z + b.dim.z) return -1;
 			
 			Vector3 cPos = new Vector3(0, 10000, 10000);
 			Vector3 ap = new Vector3(a.pos.x+a.dim.x/2f, a.pos.y+a.dim.y, a.pos.z);
@@ -340,7 +339,7 @@ public abstract class Level{
 			 &&cPos.z - (a.pos.z+a.dim.z) > cPos.y-(b.pos.z) 
 					) return 1;
 
-			if(cPos.y-(a.pos.y+a.dim.y) > cPos.y-(b.pos.y+b.dim.y)
+			if(cPos.y-(a.pos.y+a.dim.y+a.pos.z) > cPos.y-(b.pos.y+b.dim.y+b.pos.z)
 			 &&cPos.z - (a.pos.z+a.dim.z) < cPos.y-(b.pos.z) ) return -1;
 
 			if(cPos.dst(ap) > cPos.dst(bp))

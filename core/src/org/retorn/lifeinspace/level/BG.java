@@ -7,7 +7,7 @@ public class BG {
 	public static Color col, tCol;
 	
 	public static void setUp(){
-		col = Color.valueOf("FFF6E3");
+		col = Color.valueOf("A3C9C3");
 		tCol = col.cpy();
 	}
 	

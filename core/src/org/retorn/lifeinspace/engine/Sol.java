@@ -2,7 +2,8 @@ package org.retorn.lifeinspace.engine;
 
 import java.util.ArrayList;
 
-import com.badlogic.gdx.Application.ApplicationType;
+import org.retorn.lifeinspace.level.Main;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -48,11 +49,13 @@ public class Sol extends HardCollider {
 		else{
 		LM.batch.setShader(sideBlankShader);
 		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("fadeFactor"), 0f);
+		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("fOn"), 0f);
 		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("baseCol"), c);
 		LM.batch.draw(drawTop, pos.x, pos.y+pos.z+dim.y, dim.x, dim.z);
 		
 		LM.batch.setShader(sideBlankShader);
 		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("fadeFactor"), fadeFactor);
+		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("fOn"), 0.2f);
 		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("u_height"), dim.y);
 		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("u_texHeight"), drawSide.getRegionHeight());
 		LM.batch.draw(drawSide, pos.x, pos.y+pos.z, dim.x, dim.y);
@@ -64,6 +67,9 @@ public class Sol extends HardCollider {
 		float WIDTH = fbo.getWidth();
 		float HEIGHT = fbo.getHeight();
 		projPos = lvl.getCam().project(new Vector3(pos.x, pos.z+pos.y+dim.y, 0));
+		projPos.x /= Main.resFac.x;
+		projPos.y /= Main.resFac.y;
+
 		shadows.bind(1);
 		Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
 		LM.batch.setShader(shadowShader);
@@ -82,11 +88,14 @@ public class Sol extends HardCollider {
 		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("xdis"), (-projPos.x)/WIDTH);
 		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("ysamp"), 1-projPos.y/HEIGHT);
 		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("fadeFactor"), fadeFactor);
-		//float alpha = 1-Math.abs((lvl.eList.get("vc").pos.y-(pos.y+dim.y))/1500); if(alpha > 1) alpha = 1; if(alpha < 0) alpha = 0;
-		float alpha = 1f;
-		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("alpha"), alpha*0.5f);
+		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("fOn"), 0.2f);
+		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("alpha"), 0.5f);
 		LM.batch.draw(drawSide, pos.x, pos.y+pos.z, dim.x, dim.y);
-		LM.batch.setShader(null);		
+		LM.batch.setShader(null);
+		
+		LM.useDefaultCamera();
+		//LM.batch.draw(fbo.getColorBufferTexture(), 0, LM.HEIGHT, fbo.getWidth(), -fbo.getHeight());
+		LM.useLevelCamera();
 	}
 	
 	
@@ -94,8 +103,11 @@ public class Sol extends HardCollider {
 	@Override
 	public void superRender(Level lvl) {
 		if(!shadowImages.isEmpty()){
-			if((fbo.getWidth() != LM.WIDTH || fbo.getHeight() != LM.HEIGHT))
+			
+			//Maintain fbo.
+			if((fbo.getWidth() != LM.WIDTH || fbo.getHeight() != LM.HEIGHT)){
 				fbo = new FrameBuffer(Format.RGBA8888, LM.WIDTH, LM.HEIGHT, false);
+			}
 
 			fbo.begin();
 			
@@ -182,10 +194,13 @@ public class Sol extends HardCollider {
 		String pathPrefix = "shaders/";
 		
 		shadowShader = new ShaderProgram(Gdx.files.internal(pathPrefix+"SolShadow.vsh"), Gdx.files.internal(pathPrefix+"SolShadow.fsh"));
+		shadowShader.pedantic = false;	
 			System.out.println("Shadow Shader Compiled: "+shadowShader.isCompiled() +shadowShader.getLog());
 		sideShadowShader = new ShaderProgram(Gdx.files.internal(pathPrefix+"SolSideShadow.vsh"), Gdx.files.internal(pathPrefix+"SolSideShadow.fsh"));
+		sideShadowShader.pedantic = false;
 			System.out.println("Side-Shadow Shader Compiled: "+sideShadowShader.isCompiled() +sideShadowShader.getLog());
 		sideBlankShader = new ShaderProgram(Gdx.files.internal(pathPrefix+"SolSideBlank.vsh"), Gdx.files.internal(pathPrefix+"SolSideBlank.fsh"));
+		sideBlankShader.pedantic = false;	
 			System.out.println("Side-Blank Shader Compiled: "+sideBlankShader.isCompiled() +sideBlankShader.getLog());
 		
 	}
