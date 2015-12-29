@@ -9,10 +9,13 @@ import org.retorn.lifeinspace.entity.Debutton;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Vector2;
 
 public class Main extends Level{
+	public static float inc;
 	public static Vector2 resFac;
+	public static ShaderProgram blurShader;
 
 	public Main() {
 		super(Color.BLACK, "main", 60);
@@ -20,22 +23,21 @@ public class Main extends Level{
 
 	public void init() {
 		resFac = new Vector2();
-		BG.setUp();
-		Sol.setUp();
+		setUpShaders();
 		
 		addDebuttons();
 		addEnt(new Coin("coin", 10, 10, 0));
-		addEnt(new Sol("floor", 6400, 1000, 300, -700, -1000, -150, Color.valueOf("CFE0A8"), 0.1f));
-		addEnt(new Sol("floor2", 600, 100, 300, 1400, 0, -150, Color.valueOf("DFE3C8"), 0.1f));
-		addEnt(new Sol("floor3", 600, 400, 300, 2400, 0, -150, Color.valueOf("DFE3C8"), 0.1f));
-		addEnt(new Sol("wall", 600, 800, 300, 3000, 0, -150, Color.valueOf("DFE3C8"), 0.1f));
-		addEnt(new Sol("floorUpper", 1600, 50, 300, 1000, 900, -150, Color.valueOf("DFE3C8"), 0.1f));
-		addEnt(new Sol("floor4", 600, 400, 300, 3600, 0, -150, Color.valueOf("DFE3C8"), 0.1f));
-		
+		addEnt(new Sol("floor", 10400, 1000, 300, -700, -1000, -150, Color.valueOf("DFE3C8"), 0.1f, "img/stonetex.png", 1f));
 	}
 
 	public void postLoad() {
 		
+	}
+	
+	public void superRender(){
+		LM.useDefaultCamera();
+		//LM.drawText("Coinship", 100, 420, Color.WHITE, 5f);
+		LM.useLevelCamera();
 	}
 
 	public void render() {
@@ -43,12 +45,15 @@ public class Main extends Level{
 	}
 
 	public void tick() {
+		inc += LM.endTime;
 		tickResFacs();
 		
 		getCam().setTarget(entity("coin"), 5f);
 		if(entity("coin").pos.y < -100) getCam().tPos.y = -100*getCam().zoom;
+		else getCam().tPos.y += 120*getCam().zoom+(float)Math.cos(inc*0.1f)*10;
 		getCam().setZoomTarget(2.0f, 3f);
 		
+		BG.tick(this);
 		bg.set(BG.col);
 	}
 	
@@ -59,19 +64,32 @@ public class Main extends Level{
 	}
 	
 	private void addDebuttons(){
-		addEnt(new Debutton("resetY", 10, 100){
+		addEnt(new Debutton("resetX", 10, 10){
+			public void execute(){
+			entity("coin").pos.x = 0;
+			}});
+		addEnt(new Debutton("resetY", 10, 70){
 			public void execute(){
 			entity("coin").pos.y = 700;
 			}});
-		addEnt(new Debutton("resetX", 10, 30){
+		addEnt(new Debutton("Go Gravless", 10, 130){
 			public void execute(){
-			entity("coin").pos.x = 0;
+			entity("coin", Coin.class).st = 2;
+			}});
+		addEnt(new Debutton("Go Groundful", 10, 190){
+			public void execute(){
+			entity("coin", Coin.class).st = 1;
 			}});
 	}
 	
 	private void tickResFacs(){
 		resFac.set( Gdx.graphics.getWidth()/(float)LM.WIDTH_OG,
 						      Gdx.graphics.getHeight()/(float)LM.HEIGHT_OG);
+	}
+	
+	private void setUpShaders(){
+		blurShader = new ShaderProgram(Gdx.files.internal("shaders/mBlur.vsh"), Gdx.files.internal("shaders/mBlur.fsh"));
+		outPrint("Blur Shader compiled: " +blurShader.isCompiled() +"\n"+blurShader.getLog());
 	}
 
 	public void enter() {

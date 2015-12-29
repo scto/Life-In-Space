@@ -1,5 +1,7 @@
 package org.retorn.lifeinspace.level;
 
+import org.retorn.lifeinspace.engine.Level;
+
 import com.badlogic.gdx.graphics.Color;
 
 //Renders background
@@ -11,7 +13,7 @@ public class BG {
 		tCol = col.cpy();
 	}
 	
-	public static void tick(){
+	public static void tick(Level lvl){
 		col.lerp(tCol, 0.05f);
 	}
 	

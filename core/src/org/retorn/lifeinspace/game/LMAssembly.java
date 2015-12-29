@@ -23,6 +23,7 @@ public class LMAssembly {
 			
 			@Override
 			public void initLoadingAssets() {
+				loadLord = new LISLoadLord();
 				bg = Color.valueOf("120106");
 				gLay = new GlyphLayout();
 				fontName = "rockfire";
@@ -34,7 +35,7 @@ public class LMAssembly {
 				if(inc > 0.1f){
 					inc = 0f;
 					lText += ".";
-					if(lText.equals("loading....")){ 
+					if(lText.equals("loading....")){
 						loadIntroDone = true;
 						lText = "loading";
 						}

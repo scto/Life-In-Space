@@ -28,6 +28,8 @@ public class Coin extends WeakCollider {
 	
 	public final int ONGROUND = 0;
 	public final int INAIR = 1;
+	public final int GRAVLESS = 2;
+	
 	public final float drawSize = 128;
 
 	public Coin(String n, float x, float y, float z) {
@@ -35,7 +37,7 @@ public class Coin extends WeakCollider {
 	}
 
 	public void render(Level lvl) {
-		if(st == ONGROUND || st == INAIR){
+		if(st == ONGROUND || st == INAIR || st == GRAVLESS){
 			LM.batch.draw(
 					rim, 
 					getCenterPos().x-drawSize/2f, 
@@ -49,6 +51,10 @@ public class Coin extends WeakCollider {
 					drawSize/2f, drawSize/2f, drawSize, drawSize,
 					1f, 1f, rot*0.5f);
 		}
+		
+		LM.useDefaultCamera();
+		//LM.drawText("v.x: "+v.x, 100, 600);
+		LM.useLevelCamera();
 		
 	}
 
@@ -67,6 +73,10 @@ public class Coin extends WeakCollider {
 			applyGrav(lvl);
 		}
 		
+		else if(st == GRAVLESS){
+			manageGravlessInput(lvl);
+		}
+		
 		manageRot();
 		provideShadow(lvl);
 		onGround = false;
@@ -77,17 +87,35 @@ public class Coin extends WeakCollider {
 	
 	private void manageInput(Level lvl){
 		if(InputManager.downLMB){
-			float wMX = InputManager.getWorldMouse(lvl.getCam()).x;
+			float wMX =(InputManager.getWorldMouse(lvl.getCam()).x-getCenterPos().x)*maxV;
 			
-		v.x += Tween.tween(v.x, (wMX-getCenterPos().x) *maxV, accel * (!onGround ? 0.1f : 1f));
+			v.x += Tween.tween(v.x, wMX, accel * (!onGround ? 0.1f : 1f));
 		}
 		
 		else v.x += Tween.tween(v.x, 0, accel*0.8f * (!onGround ? 0.2f : 1f));//If mouse is behind
 	}
 	
+	private void manageGravlessInput(Level lvl){
+		if(InputManager.downLMB){ 
+			float wMX = (InputManager.getWorldMouse(lvl.getCam()).x-getCenterPos().x)*maxV;
+			float wMY = (InputManager.getWorldMouse(lvl.getCam()).y-getCenterPos().y)*maxV;
+			
+			v.x += Tween.tween(v.x, wMX, accel*0.05f);
+			v.y += Tween.tween(v.y, wMY, accel*0.05f);
+		}
+		
+		else{
+			v.x += Tween.tween(v.x, 0f, accel*0.15f);
+			v.y += Tween.tween(v.y, 0f, accel*0.15f);
+		}
+	}
+	
 	private void manageRot(){
 		if(st == ONGROUND) rotV = -v.x * 0.024f;
 		if(st == INAIR) rotV += Tween.tween(rotV, 0f, 1f);
+		if(st == GRAVLESS){
+				rotV += Tween.tween(rotV, Math.abs(v.x) > 1500 ? -v.x*0.001f : 0f,  1f);
+		}
 		
 		rot += rotV;
 	}
@@ -99,6 +127,16 @@ public class Coin extends WeakCollider {
 		if(normal.x != 0 && b instanceof HardCollider && st == INAIR){
 			v.x *= -0.4f;//Bounce
 			v.y += Math.abs(v.x)*0.9f;
+		}
+		else if(st == GRAVLESS && b instanceof HardCollider){
+			if(normal.y != 0){
+				v.y *= -0.3f;
+				rotV = -v.x*0.024f;
+			}
+			if(normal.x != 0){
+				v.x *= -0.3f;
+				rotV = -v.y*0.024f;
+			}
 		}
 		else super.collide(b, collisionTime, normal, lvl);
 	}

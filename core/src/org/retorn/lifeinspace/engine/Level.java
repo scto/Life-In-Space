@@ -280,7 +280,7 @@ public abstract class Level{
 				e.render(this);
 				
 				//If this entity was clicked, and is the closest to the screen, set it to the debug ent. High positions in renderables take precedence over lower ones.
-				if(InputManager.pressedLMB && LM.debug){
+				if((InputManager.pressedLMB || InputManager.pressedMMB) && LM.debug){
 						if(e.getRect(getCam()).contains(Gdx.input.getX(), LM.HEIGHT-Gdx.input.getY())){
 							if(debugIndex.equals(e.name)){debugIndex = "";}
 							else
@@ -315,7 +315,7 @@ public abstract class Level{
 		}
 		
 		try{Collections.sort(masterList, new entSorter());}
-		catch(IllegalArgumentException e){outPrint("The Render Order Fucked Itself.");}
+		catch(IllegalArgumentException e){}
 		
 		LM.batch.begin();
 		

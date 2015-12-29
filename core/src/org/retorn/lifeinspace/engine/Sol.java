@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -25,10 +26,13 @@ public class Sol extends HardCollider {
 	protected static ShaderProgram sideShadowShader;
 	protected static ShaderProgram sideBlankShader;
 	public float fadeFactor;//How dark the bottom-fade-colour fades.
+	public float darkFactor = 0.4f;//How dark the side is by default.
 	protected Vector3 projPos;
 	protected FrameBuffer fbo;//Used to render shadows.
 	public ArrayList<Shadow> shadowImages;//Provided each frame by shadow-providing entities.  Used to pre-render the shadows.
 	protected Texture shadowDraw;//FrameBuffer's Color Texture.
+	private String path;//Path for texture
+	private Texture tex;
 	
 	
 	public Sol(String n, float w, float h, float d, float x, float y, float z, Color col, float ff) {
@@ -36,6 +40,24 @@ public class Sol extends HardCollider {
 		c = col;
 		fadeFactor = ff;
 		superRender = true;
+		path = "img/defTex.png";
+	}
+	
+	public Sol(String n, float w, float h, float d, float x, float y, float z, Color col, float ff, String p) {
+		super(n, w, h, d, x, y, z, 0);
+		c = col;
+		fadeFactor = ff;
+		superRender = true;
+		path = p;
+	}
+	
+	public Sol(String n, float w, float h, float d, float x, float y, float z, Color col, float ff, String p, float df) {
+		super(n, w, h, d, x, y, z, 0);
+		c = col;
+		fadeFactor = ff;
+		darkFactor = df;
+		superRender = true;
+		path = p;
 	}
 
 	public void tick(Level lvl) {
@@ -47,15 +69,23 @@ public class Sol extends HardCollider {
 			render(lvl, shadowDraw);
 			}
 		else{
+			
+		tex.bind(2);
+		Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
+		
 		LM.batch.setShader(sideBlankShader);
+		sideBlankShader.setUniformi("u_texture2", 2);
+		sideBlankShader.setUniformf("u_size", dim.x, dim.z);
+		sideBlankShader.setUniformf("u_texSize", tex.getWidth(), tex.getHeight());
 		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("fadeFactor"), 0f);
 		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("fOn"), 0f);
 		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("baseCol"), c);
 		LM.batch.draw(drawTop, pos.x, pos.y+pos.z+dim.y, dim.x, dim.z);
 		
 		LM.batch.setShader(sideBlankShader);
+		sideBlankShader.setUniformi("u_texture2", 2);
 		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("fadeFactor"), fadeFactor);
-		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("fOn"), 0.2f);
+		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("fOn"), darkFactor);
 		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("u_height"), dim.y);
 		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("u_texHeight"), drawSide.getRegionHeight());
 		LM.batch.draw(drawSide, pos.x, pos.y+pos.z, dim.x, dim.y);
@@ -70,10 +100,13 @@ public class Sol extends HardCollider {
 		projPos.x /= Main.resFac.x;
 		projPos.y /= Main.resFac.y;
 
+		tex.bind(2);
 		shadows.bind(1);
 		Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
 		LM.batch.setShader(shadowShader);
-		shadowShader.setUniformf(shadowShader.getUniformLocation("u_size"), new Vector2(dim.x, dim.z));
+		shadowShader.setUniformi("u_texture2", 2);
+		shadowShader.setUniformf(shadowShader.getUniformLocation("u_size"), dim.x, dim.z);
+		shadowShader.setUniformf(shadowShader.getUniformLocation("u_texSize"), tex.getWidth(), tex.getHeight());
 		shadowShader.setUniformf(shadowShader.getUniformLocation("u_screensize"), new Vector2(WIDTH*lvl.getCam().zoom, HEIGHT*lvl.getCam().zoom));
 		shadowShader.setUniformf(shadowShader.getUniformLocation("baseCol"), c);
 		shadowShader.setUniformf(shadowShader.getUniformLocation("xdis"), (-projPos.x)/WIDTH);
@@ -82,13 +115,15 @@ public class Sol extends HardCollider {
 		LM.batch.draw(drawTop, pos.x, pos.y+pos.z+dim.y, dim.x, dim.z);
 		
 		LM.batch.setShader(sideShadowShader);
+		sideShadowShader.setUniformi("u_texture2", 2);
 		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("baseCol"), c);
 		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("u_size"), new Vector2(dim.x, dim.y));
+		sideShadowShader.setUniformf("u_texSize", tex.getWidth(), tex.getHeight());
 		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("u_screensize"), new Vector2(WIDTH*lvl.getCam().zoom, HEIGHT*lvl.getCam().zoom));
 		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("xdis"), (-projPos.x)/WIDTH);
 		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("ysamp"), 1-projPos.y/HEIGHT);
 		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("fadeFactor"), fadeFactor);
-		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("fOn"), 0.2f);
+		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("fOn"), darkFactor);
 		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("alpha"), 0.5f);
 		LM.batch.draw(drawSide, pos.x, pos.y+pos.z, dim.x, dim.y);
 		LM.batch.setShader(null);
@@ -154,24 +189,19 @@ public class Sol extends HardCollider {
 		shadowImages = new ArrayList<Shadow>();
 		fbo = new FrameBuffer(Format.RGBA8888, LM.WIDTH, LM.HEIGHT, false);
 		
+		if(!LM.loader.isLoaded(path)) LM.loadTexture(path);
 	}
 
 	@Override
 	public boolean doneLoad(Level lvl) {
-			//Setting the index of the shadow's binded texture in the Shader.
-			shadowShader.begin();
-			shadowShader.setUniformi("u_texture1", 1);
-			shadowShader.end();
-			
-			sideShadowShader.begin();
-			sideShadowShader.setUniformi("u_texture1", 1);
-			sideShadowShader.end();
-			
-			//Binding the shadow texture to index 1, then resetting the active texture to 0.
-			//shadow.bind(1);
-			//Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
+		if(LM.loader.isLoaded(path)){
+			tex = new Texture(path);
+			tex.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
 			
 			return true;
+		}
+		
+			return false;
 	}
 	
 	//SET UP FOR ALL SOLS. CALLED IN LOADLORDS.
@@ -202,7 +232,15 @@ public class Sol extends HardCollider {
 		sideBlankShader = new ShaderProgram(Gdx.files.internal(pathPrefix+"SolSideBlank.vsh"), Gdx.files.internal(pathPrefix+"SolSideBlank.fsh"));
 		sideBlankShader.pedantic = false;	
 			System.out.println("Side-Blank Shader Compiled: "+sideBlankShader.isCompiled() +sideBlankShader.getLog());
-		
+			
+		//Setting the index of the shadow's binded texture in the Shader.
+		shadowShader.begin();
+		shadowShader.setUniformi("u_texture1", 1);
+		shadowShader.end();
+			
+		sideShadowShader.begin();
+		sideShadowShader.setUniformi("u_texture1", 1);
+		sideShadowShader.end();
 	}
 
 	@Override
