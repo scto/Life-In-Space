@@ -11,11 +11,13 @@ import org.retorn.lifeinspace.engine.Tween;
 import org.retorn.lifeinspace.engine.WeakCollider;
 import org.retorn.lifeinspace.level.Main;
 
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector3;
 
 public class Coin extends WeakCollider {
+	private Sound jumpSound;
 	private TextureRegion front, rim;
 	private Shadow shadow;
 	
@@ -55,7 +57,6 @@ public class Coin extends WeakCollider {
 		LM.useDefaultCamera();
 		//LM.drawText("v.x: "+v.x, 100, 600);
 		LM.useLevelCamera();
-		
 	}
 
 	public void tick(Level lvl) {
@@ -146,6 +147,7 @@ public class Coin extends WeakCollider {
 		onGround =  false;
 		jumped = true;
 		st = INAIR;
+		jumpSound.play(LM.gameSoundEffectVolume*0.5f, 0.9f+LM.dice.nextFloat()*0.2f, 0.5f);
 	}
 	
 	private void land(Level lvl){
@@ -160,17 +162,22 @@ public class Coin extends WeakCollider {
 		LM.loadTexture("img/coin_face_front.png");
 		LM.loadTexture("img/coin_rim.png");
 		LM.loadTexture("img/coin_shad.png");
+		
+		LM.loadSound("audio/coin_jump.ogg");
 	}
 
 	public boolean doneLoad(Level lvl) {
 		if(LM.loader.isLoaded("img/coin_face_front.png")
 		   && LM.loader.isLoaded("img/coin_rim.png")
-		   && LM.loader.isLoaded("img/coin_shad.png")){
+		   && LM.loader.isLoaded("img/coin_shad.png")
+		   && LM.loader.isLoaded("audio/coin_jump.ogg")){
 			
 			front = new TextureRegion(LM.loader.get("img/coin_face_front.png", Texture.class));
 			rim = new TextureRegion(LM.loader.get("img/coin_rim.png", Texture.class));
 			
 			shadow = new Shadow(LM.loader.get("img/coin_shad.png", Texture.class), 0f, 0f);
+			
+			jumpSound = LM.loader.get("audio/coin_jump.ogg", Sound.class);
 			
 			return true;
 		}

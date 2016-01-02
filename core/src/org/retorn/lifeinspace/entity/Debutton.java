@@ -20,20 +20,25 @@ public abstract class Debutton extends Entity {
 	
 	private GlyphLayout gLay;
 	private Rectangle bounds;
+	
+	private float scale;
+	public boolean on = true;
 
-	public Debutton(String n, float x, float y) {
+	public Debutton(String n, float x, float y, float sc, boolean o) {
 		super(n, 1, 1, 1, x, y, 0, 2);
 		rendering = false;
+		scale = sc;
+		on = o;
 	}
-
+	
 	public void render(Level lvl) {
 		LM.useDefaultCamera();
-		LM.drawText(name, getCenterPos().x-gLay.width, getCenterPos().y+gLay.height, col, 2f);
+		if(on) LM.drawText(name, pos.x, pos.y+gLay.height*scale + 10*scale, col, scale);
 		LM.useLevelCamera();
 	}
 
 	public void tick(Level lvl) {
-		if(st == NORMAL){
+		if(st == NORMAL && on){
 			if(bounds.contains(InputManager.getWorldMouse(LM.defaultCam)) && InputManager.pressedLMB) press(lvl);
 		}
 	}
@@ -64,8 +69,8 @@ public abstract class Debutton extends Entity {
 		gLay = new GlyphLayout();
 		
 		gLay.setText(LM.drawText, name);
-		dim.x = gLay.width*2f;
-		dim.y = (gLay.height*2f+30);
+		dim.x = gLay.width*scale;
+		dim.y = (gLay.height*scale+15*scale);
 		
 		bounds = new Rectangle(pos.x, pos.y, dim.x, dim.y);
 	}
