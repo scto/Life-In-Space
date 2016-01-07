@@ -9,7 +9,8 @@ public class BG {
 	public static Color col, tCol;
 	
 	public static void setUp(){
-		col = Color.valueOf("A3C9C3");
+		//col = Color.valueOf("A3C9C3");
+		col = Color.valueOf("FFF2C7");
 		tCol = col.cpy();
 	}
 	

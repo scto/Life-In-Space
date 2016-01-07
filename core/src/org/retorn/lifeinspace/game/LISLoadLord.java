@@ -12,6 +12,9 @@ public class LISLoadLord extends LoadLord{
 		BG.setUp();
 		Sol.setUp();
 		LM.loadTexture("img/drop.png");
+		LM.loadTexture("img/pot_back.png");
+		LM.loadTexture("img/pot_front.png");
+		LM.loadTexture("img/plantShad.png");
 		ColProfile.setUp();
 	}
 

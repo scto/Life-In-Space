@@ -69,7 +69,6 @@ public abstract class WeakCollider extends Entity {
 					if(v.y <= b.v.y + b.vr.y/2 + 1f || v.y == 0 && !jumped){
 						v.y = b.v.y +b.vr.y/2;
 						v.y = getPosV(pos.y, b.pos.y + b.dim.y + 0.2f+b.v.y*LM.delta+b.vr.y/2*LM.delta);//+ 1 MIGHT NEED TO GO?
-						v.y += 1.0f;
 						va.y = 0;
 						//Storing how much is being added to the actual v.
 						//ONLY so it can be removed later.

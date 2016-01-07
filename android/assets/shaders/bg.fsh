@@ -35,7 +35,7 @@ void main(void) {
 	//COLOUR-MAPPING
 	vec4 init = texture2D(u_texture, v_texCoords);
 	init.rgb *= bright;
-	init.rgb += (bright-1.0)*0.5;
+	init.rgb += (bright-1.0)*0.15;
 	vec4 fin = init;
 
 	float grey = 0.299 * fin.r + 0.587 * fin.g + 0.114 * fin.b;
@@ -55,6 +55,6 @@ void main(void) {
 	gl_FragColor = fin;
 	gl_FragColor.a = init.a;
 	
-	gl_FragColor = mix(gl_FragColor, BlendOverlay(gl_FragColor, tint), overlayAlpha)*bright;
+	gl_FragColor = mix(gl_FragColor, BlendOverlay(gl_FragColor, tint), overlayAlpha);
 }
 
