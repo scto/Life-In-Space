@@ -182,6 +182,7 @@ public abstract class LM extends ApplicationAdapter{
 	
 	public void render () {
 		delta = Gdx.graphics.getDeltaTime() < 0.06f? Gdx.graphics.getDeltaTime() : 0.016f;
+		delta = delta == 0 ? 0.0001f : delta;
 		endTime = delta*gameSpeed;
 		//If there's a new level, change it.
 	if(!lvlID.equals(newLvlID)) migrateLevels();

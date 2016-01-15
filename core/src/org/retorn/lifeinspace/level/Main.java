@@ -7,13 +7,17 @@ import org.retorn.lifeinspace.engine.LM;
 import org.retorn.lifeinspace.engine.Level;
 import org.retorn.lifeinspace.engine.Sol;
 import org.retorn.lifeinspace.engine.Tween;
+import org.retorn.lifeinspace.entity.ButtonUp;
 import org.retorn.lifeinspace.entity.Coin;
 import org.retorn.lifeinspace.entity.Debutton;
+import org.retorn.lifeinspace.entity.NDFTest;
 import org.retorn.lifeinspace.entity.Plunt;
 import org.retorn.lifeinspace.entity.Pot;
+import org.retorn.lifeinspace.entity.SeedAsp;
 import org.retorn.lifeinspace.tech.ColProfile;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap.Format;
@@ -35,9 +39,10 @@ public class Main extends Level{
 	public static ShaderProgram blurShader, tintShader;
 	public static ShaderProgram plantShader;
 	private static ShaderProgram blurVShader, blurHShader;
-	private static FrameBuffer fbo, fbo2;
+	private static FrameBuffer fbo;
 	private static Color tint;
 	private static ColProfile cp, cpTarg, cpDef, cpDark;
+	public static Sound jumpSound, landSound;
 
 	public Main() {
 		super(Color.BLACK, "main", 60);
@@ -47,29 +52,44 @@ public class Main extends Level{
 		resFac = new Vector2();
 		setUpShaders();
 		
-		addDebuttons();
-		addEnt(new Coin("coin", 10, 10, 0));
-		addEnt(new Sol("floor1", 1000, 1000, 300, 0, -1000, -150, Color.valueOf("DFE3C8"), 0.1f, "img/stonetex.png", 1f));
-		addEnt(new Sol("floor2", 1000, 1000, 300, 1800, -1000, -150, Color.valueOf("291B21"), 0.1f, "img/stonetex.png", 1f));
+		LM.loadSound("audio/coin_jump.ogg");
+		LM.loadSound("audio/coin_land.ogg");
+		
+		//addDebuttons();
+		addEnt(new ButtonUp("ib", 10, 10));
+		
+		addEnt(new Sol("floor1", 1000, 1000, 300, 0, -1000, -150, Color.valueOf("EDCDB7"), 0.1f, "img/stonetex.png", 1f));
+		addEnt(new Sol("floor2", 1000, 1000, 300, 1800, -1000, -150, Color.valueOf("AAAAAA"), 0.1f, "img/stonetex.png", 1f));
 		addEnt(new Sol("floor3", 1000, 1000, 300, 3600, -1000, -150, Color.valueOf("DFE3C8"), 0.1f, "img/stonetex.png", 1f));
 		
-		addEnt(new Plunt("plunt1", 60, 400, 40, 605, 50, 80, "img/plant1.png"));
 		//addEnt(new Plunt("plunt2", 60, 400, 40, 200, 0, 100, "img/plant1.png"));
 		
+		addEnt(new Pot("pot-2", 300, 100, 80));
+		addEnt(new Pot("pot-1", 400, 100, 80));
+		addEnt(new Pot("pot0", 500, 100, 80));
 		addEnt(new Pot("pot1", 600, 100, 80));
+		addEnt(new Pot("pot2", 700, 100, 80));
+		addEnt(new Pot("pot3", 800, 100, 80));
+		addEnt(new Pot("pot4", 900, 100, 80));
+		
+		addEnt(new SeedAsp("seed0", 100, 100, 80));
+		addEnt(new SeedAsp("seed1", 50, 100, 80));
+		addEnt(new SeedAsp("seed2", 0, 100, 80));
+		
+		addEnt(new Coin("coin", 10, 10, -10));
 		
 		camList.put("spaceCam", new Camera(1280, 720));
 		camList.get("spaceCam").setPos(2100, 500);
 		camList.get("spaceCam").zoom = 3.5f;
 		
 		fbo = new FrameBuffer(Format.RGB888, LM.WIDTH, LM.HEIGHT, false);
-		fbo2 = new FrameBuffer(Format.RGB888, LM.WIDTH, LM.HEIGHT, false);
 		
 		setUpColors();
 	}
 
 	public void postLoad() {
-		
+		jumpSound = LM.loader.get("audio/coin_jump.ogg", Sound.class);
+		landSound = LM.loader.get("audio/coin_land.ogg", Sound.class);
 	}
 	
 	public void superRender(){
@@ -81,7 +101,8 @@ public class Main extends Level{
 	}
 
 	public void render() {
-		renderDebuttons();
+		//renderDebuttons();
+		renderButtons();
 		fbo.end();
 
 		//Color-Correction
@@ -115,7 +136,7 @@ public class Main extends Level{
 		cp.tween(cpTarg, 0.1f);
 		
 		LM.useDefaultCamera();
-		LM.drawText("fps: "+Gdx.graphics.getFramesPerSecond(), 0, 100);
+		//LM.drawText("fps: "+Gdx.graphics.getFramesPerSecond(), 0, 100);
 		LM.useLevelCamera();
 	}
 
@@ -135,7 +156,12 @@ public class Main extends Level{
 			entity("coin").pos.x = 100;
 			getCam().pos.x = entity("coin").getCenterPos().x;
 			bright = 1.5f;
+			addEnt(new SeedAsp("seed2"+LM.dice.nextFloat(), 10, 100, 80));
 		}
+	}
+	
+	public void renderButtons(){
+			entity("ib").render(this);
 	}
 	
 	public void renderDebuttons(){
@@ -230,6 +256,7 @@ public class Main extends Level{
 		outPrint("PLANT SHADER COMPILED: "+plantShader.isCompiled() +plantShader.getLog());
 		plantShader.pedantic = false;
 		Plunt.plantShader = plantShader;
+		Pot.plantShader = plantShader;
 	}
 	
 	private void setUpColors(){

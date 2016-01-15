@@ -11,29 +11,24 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.math.Vector3;
 
-public class Plunt extends WeakCollider  implements DisEnt{
-	private String path;
+public class Plunt extends WeakCollider {
 	private TextureRegion plant;
 	private Texture mask;
 	public static ShaderProgram plantShader;
+	private Pot pot;
 	private float opacity = 1f;
 	private float bright = 1f;
 	private float gFac = 0f;
+	private float gFacT = 1f;
+	private float incDis;//Displacement on inc
 	public int st;
 
-	public Plunt(String n, float w, float h, float d, float x, float y, float z, String p) {
-		super(n, w, h, d, x, y, z, 1);
-		dis.set(x, y, z);
-		path = p;
+	public Plunt(String n, Pot po) {
+		super(n, 60, 400, 40, 0, 0, 0, 2);
+		pot = po;
 		
 		rendering = false;
-	}
-
-	public void spawn(Vector3 iPos) {
-		setCenterPos(iPos);
-		setCenterTarget(iPos.x + dis.x, iPos.y + dis.y, iPos.z + dis.z, 10f);
 	}
 
 	public void render(Level lvl) {
@@ -45,11 +40,11 @@ public class Plunt extends WeakCollider  implements DisEnt{
 		plantShader.setUniformf("bright", bright);
 		plantShader.setUniformf("opacity", opacity);
 		plantShader.setUniformf("sharp", 6f);
-		plantShader.setUniformf("time", Main.inc*0.5f);
+		plantShader.setUniformf("time", Main.inc*0.5f+incDis);
 		plantShader.setUniformf("gFac", 1f-gFac);
 		plantShader.setUniformf("wiggleFac", 5f);
 		plantShader.setUniformf("wiggleMag", 0.03f);
-		gFac += Tween.tween(gFac, 1f, 0.1f);
+		//gFac += Tween.tween(gFac, gFacT, 1.1f);
 		
 		LM.batch.draw(plant, 
 				getCenterPos().x-plant.getRegionWidth()/2f +1,
@@ -58,7 +53,7 @@ public class Plunt extends WeakCollider  implements DisEnt{
 				170,
 				plant.getRegionWidth(),
 				plant.getRegionHeight(),
-				0.5f+gFac*0.2f,
+				0.5f+gFac*0.15f,
 				0.5f+gFac*0.05f,
 				0f
 				);
@@ -67,34 +62,38 @@ public class Plunt extends WeakCollider  implements DisEnt{
 	}
 
 	public void tick(Level lvl) {
-		if(st == IN){
-			v.setZero();
-			cType = 2;
-		}
-		
-		if(st == OUT){
-			cType = 1;
-		}
+		incDis += Math.abs(v.x*0.00008f);
+	}
+	
+	public void plant(Pot p){
+		setCenterPos(p.getCenterPos());
+		pos.y = p.pos.y + 18;
+		pos.x -= 7;
+		setParent(p);
+		p.plant(this);
 	}
 
 	public void init(Level lvl) {
-		LM.loadTexture(path);
+		LM.loadTexture("img/plant1.png");
 		LM.loadTexture("img/plant1Mask.png");
 	}
 
 	public boolean doneLoad(Level lvl) {
-		if(		LM.loader.isLoaded(path)
+		if(		LM.loader.isLoaded("img/plant1.png")
 				&& LM.loader.isLoaded("img/pot_back.png")
 				&& LM.loader.isLoaded("img/pot_front.png")
 				&& LM.loader.isLoaded("img/plantShad.png")
 				&& LM.loader.isLoaded("img/plant1Mask.png")){
 			
-			plant = new TextureRegion(LM.loader.get(path, Texture.class));
+			plant = new TextureRegion(LM.loader.get("img/plant1.png", Texture.class));
 			mask = LM.loader.get("img/plant1Mask.png", Texture.class);
+			
+			incDis = LM.dice.nextFloat()*20;
+			
+			plant(pot);
 			
 			return true;
 		}
-		outPrint("fuck");
 		return false;
 	}
 

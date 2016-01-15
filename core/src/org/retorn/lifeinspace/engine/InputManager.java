@@ -36,7 +36,7 @@ public class InputManager extends InputAdapter{
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		if(pointer == 0)
+		if(pointer == 0){
 			prevDrag.set(screenX, screenY);
 		if(button == Buttons.LEFT && pointer == 0){
 			downLMB = true; pressedLMB = true;
@@ -45,6 +45,7 @@ public class InputManager extends InputAdapter{
 		if(button == Buttons.RIGHT){downRMB = true; pressedRMB = true;}
 		if(button == Buttons.MIDDLE){downMMB = true; pressedMMB = true;}
 		T.set(screenX, screenY);//If you stop touching, this will be wherever you left off.
+		}
 		return super.touchDown(screenX, screenY, pointer, button);
 	}
 
@@ -54,10 +55,11 @@ public class InputManager extends InputAdapter{
 		if(pointer == 0){
 			prevDrag.set(0,0);
 			deltaDrag.set(0,0);
-		}
+		
 		if(button == Buttons.LEFT && pointer == 0){downLMB = false; upLMB = true;}
 		if(button == Buttons.RIGHT){downRMB = false;}
 		if(button == Buttons.MIDDLE){downMMB = false;}
+		}
 		return super.touchUp(screenX, screenY, pointer, button);
 	}
 

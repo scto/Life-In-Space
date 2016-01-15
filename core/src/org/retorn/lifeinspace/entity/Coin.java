@@ -13,18 +13,15 @@ import org.retorn.lifeinspace.level.Main;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 
 public class Coin extends WeakCollider {
-	private Sound jumpSound, landSound;
 	private Music rollMusic;
 	private TextureRegion front, rim;
 	private Texture ref;
@@ -33,15 +30,20 @@ public class Coin extends WeakCollider {
 	Vector3 projPos;
 	
 	private ShaderProgram refShader;
-	private FrameBuffer fbo;
 	
 	private float maxV = 3.0f;
 	private float accel = 10f;
 	private float rollVol = 1f;
 	
 	private float refAlpha;
-	private float refAlphaT = 0.3f;
+	private float refAlphaT = 0.5f;
 
+	public boolean canPickUp;
+	public boolean carrying;
+	public Pickup heldEnt;
+	public Pickup potPickup;//PotEnt is potentialEnt ie one that you're in front of/highlighting.
+	public Inter potInter;
+	
 	private float rot;
 	private float rotV;//Amount added to rot each frame.
 	public int st;
@@ -54,19 +56,17 @@ public class Coin extends WeakCollider {
 
 	public Coin(String n, float x, float y, float z) {
 		super(n, 119, 113, 18, x, y, z, 1);
-		superRender = true;
 	}
 
 	public void render(Level lvl) {
-		drawCoin();
-		LM.useDefaultCamera();
 		useShader(lvl);
-		//LM.batch.draw(fbo.getColorBufferTexture(), 0, LM.HEIGHT, LM.WIDTH, -LM.HEIGHT);
-		LM.useLevelCamera();
+		drawCoin();
 		LM.batch.setShader(null);
 	}
 
 	public void tick(Level lvl) {
+		managePickups(lvl);
+		
 		if(st == ONGROUND){
 			manageInput(lvl);
 			if(InputManager.deltaDrag.y > 35*Main.resFac.y)  jump();
@@ -77,7 +77,7 @@ public class Coin extends WeakCollider {
 		}
 		
 		else if(st == INAIR){
-			if(v.y < 0) weight += Tween.tween(weight, 300, 3); //Tween up weight if you're falling
+			if(v.y < 0) weight += Tween.tween(weight, 320, 3); //Tween up weight if you're falling
 			manageInput(lvl);
 			if(onGround) land(lvl);
 			applyGrav(lvl);
@@ -92,13 +92,81 @@ public class Coin extends WeakCollider {
 		rollMusic.setVolume(rollVol);
 		manageRot();
 		provideShadow(lvl);
-		onGround = false;
 		
 		//debug
 		if(InputManager.pressedE) pos.y = 1000;
 	}
 	
+	private void pickUp(Pickup p, Level lvl){
+		heldEnt = p;
+		carrying = true;
+		p.pickup(lvl);
+		outPrint("shit");
+	}
 	
+	public void drop(Level lvl){
+		heldEnt.drop(lvl);
+		heldEnt = null;
+		carrying = false;
+		lvl.getCam().setShake(7, 60, 50);
+	}
+	
+	public void cleanse(Level lvl){
+		heldEnt.drop(lvl);
+		heldEnt = null;
+		carrying = false;
+	}
+	
+	private void swap(Pickup p1, Level lvl){
+		drop(lvl);
+		pickUp(p1, lvl);
+	}
+	
+	private void managePickups(Level lvl){
+		canPickUp = false;
+		potPickup = null;
+		potInter = null;
+		
+		float maxOverlap = 35;
+		
+		//FIND POT-PICKUP & POT-INTER
+		for(Entity e : lvl.eList.values()){
+			if(e instanceof Inter){
+				//Check overlap
+				Rectangle r1 = new Rectangle(e.pos.x, e.pos.y+e.pos.z, e.dim.x, e.dim.y+e.dim.z);
+				Rectangle r2 = new Rectangle(pos.x, pos.y+pos.z, dim.x, dim.y+dim.z);
+				if(r1.overlaps(r2)){
+					//If the overlap is higher than the current max, make this the pickUpCandidate
+					float xOverlap = Math.min(r1.x+r1.width, r2.x+r2.width) - Math.max(r1.x, r2.x);
+					if(xOverlap > maxOverlap && xOverlap > 35 && heldEnt != e){
+						potInter = (Inter) e;
+						potPickup = (Pickup) e;
+						maxOverlap = xOverlap;
+					}
+				}
+			}
+		}
+		
+		//IF YOU HAVE A POT PICKUP
+		if(potPickup != null) canPickUp = true;
+			
+		if(ButtonUp.pressed){
+			//Manage pick-up/drop
+			//Pick up | Have only potPickup
+				if(potPickup != null && heldEnt == null) pickUp(potPickup, lvl);
+			//Drop | Have a heldEnt & nothing else
+				else if(heldEnt != null && potInter == null && potPickup == null) drop(lvl);
+			//Swap | Have heldEnt & potPickup
+			else if(potPickup != null && heldEnt != null)
+					if(!potPickup.interact(heldEnt, lvl)) swap(potPickup, lvl);
+			//Interact & Drop if you can't | Have heldEnt & potInter
+				else if(potInter != null && heldEnt != null)
+					if(!potInter.interact(heldEnt, lvl)) drop(lvl);
+			}
+		
+		//If there's nothing to be picked up but you have an entity & hit the button.
+		else if(ButtonUp.pressed && heldEnt != null) drop(lvl);
+	}
 	
 	private void manageInput(Level lvl){
 		if(InputManager.downLMB){
@@ -140,9 +208,9 @@ public class Coin extends WeakCollider {
 	@Override
 	public void collide(Entity b, float collisionTime, Vector3 normal, Level lvl) {
 		if(normal.x != 0 && b instanceof HardCollider && st == INAIR){
-			v.x *= -0.4f;//Bounce
+			v.x *= -0.25f;//Bounce
 			v.y += Math.abs(v.x)*0.9f;
-			landSound.play(LM.gameSoundEffectVolume*0.5f, 0.65f+LM.dice.nextFloat()*0.1f, 0.5f);
+			Main.landSound.play(LM.gameSoundEffectVolume*0.5f, 0.65f+LM.dice.nextFloat()*0.1f, 0.5f);
 		}
 		else if(st == GRAVLESS && b instanceof HardCollider){
 			if(normal.y != 0){
@@ -151,7 +219,7 @@ public class Coin extends WeakCollider {
 			}
 			if(normal.x != 0){
 				v.x *= -0.3f;
-				rotV = -v.y*0.024f;
+				rotV = -v.y*0.024f*normal.x;
 			}
 		}
 		else super.collide(b, collisionTime, normal, lvl);
@@ -162,16 +230,21 @@ public class Coin extends WeakCollider {
 		onGround =  false;
 		jumped = true;
 		st = INAIR;
-		jumpSound.play(LM.gameSoundEffectVolume*0.5f, 0.9f+LM.dice.nextFloat()*0.2f, 0.5f);
+		Main.jumpSound.play(LM.gameSoundEffectVolume*0.5f, 0.9f+LM.dice.nextFloat()*0.2f, 0.5f);
 	}
 	
 	private void land(Level lvl){
 		weight = 120;//Reset weight after it was tweened up in the air.
 		st = ONGROUND;
 		lvl.getCam().setShake(22f*lvl.getCam().zoom, 100f, 70f*lvl.getCam().zoom);
-		landSound.play(LM.gameSoundEffectVolume*0.5f, 0.95f+LM.dice.nextFloat()*0.1f, 0.5f);
+		Main.landSound.play(LM.gameSoundEffectVolume*0.5f, 0.95f+LM.dice.nextFloat()*0.1f, 0.5f);
 		refAlpha = 3f;
 		Main.blurFast(0.3f);
+		
+		//Make pots bounce
+		/*for(Entity e: lvl.eList.values()){
+			if(e instanceof Pot) e.v.y += 2000f - e.getCenterPos().dst(getCenterPos());
+		}*/
 	}
 	
 	private void drawCoin(){
@@ -192,14 +265,7 @@ public class Coin extends WeakCollider {
 	}
 	
 	public void superRender(Level lvl) {
-		fbo.begin();
-		LM.batch.begin();
-		Gdx.gl.glClearColor(0, 0, 0, 0f);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		drawCoin();
-		LM.batch.setShader(null);
-		LM.batch.end();
-		fbo.end();
+
 	}
 
 	private void useShader(Level lvl){
@@ -208,8 +274,8 @@ public class Coin extends WeakCollider {
 		Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
 		refShader.setUniformi("u_texture1", 1);
 		refShader.setUniformf("alpha", refAlpha);
-		refShader.setUniformf("time", -Main.inc*0.01f);
-		refShader.setUniformf("u_size", LM.WIDTH*10, LM.HEIGHT*10);
+		refShader.setUniformf("time", -Main.inc*0.3f);
+		refShader.setUniformf("u_size", LM.WIDTH, LM.HEIGHT);
 		refShader.setUniformf("u_screensize", LM.WIDTH*lvl.getCam().zoom, LM.HEIGHT*lvl.getCam().zoom);
 		refShader.setUniformf("xdis", 0);
 		refShader.setUniformf("ydis", Main.inc*0.005f);
@@ -223,15 +289,11 @@ public class Coin extends WeakCollider {
 		LM.loadTexture("img/coin_shad.png");
 		LM.loadTexture("img/cloudtex.png");
 		
-		LM.loadSound("audio/coin_jump.ogg");
-		LM.loadSound("audio/coin_land.ogg");
 		LM.loadMusic("audio/coin_roll.ogg");
 		
 		refShader = new ShaderProgram(Gdx.files.internal("shaders/coin.vsh"), Gdx.files.internal("shaders/coin.fsh"));
 		outPrint("REF SHADER COMPILED: "+refShader.isCompiled() +refShader.getLog());
 		refShader.pedantic = false;
-		
-		fbo = new FrameBuffer(Format.RGBA8888, LM.WIDTH, LM.HEIGHT, false);
 		
 		projPos = new Vector3();
 	}
@@ -241,8 +303,6 @@ public class Coin extends WeakCollider {
 		   && LM.loader.isLoaded("img/coin_rim.png")
 		   && LM.loader.isLoaded("img/coin_shad.png")
 		   && LM.loader.isLoaded("img/cloudtex.png")
-		   && LM.loader.isLoaded("audio/coin_jump.ogg")
-		   && LM.loader.isLoaded("audio/coin_land.ogg")
 		   && LM.loader.isLoaded("audio/coin_roll.ogg")){
 			
 			front = new TextureRegion(LM.loader.get("img/coin_face_front.png", Texture.class));
@@ -252,14 +312,12 @@ public class Coin extends WeakCollider {
 			ref.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
 			
 			shadow = new Shadow(LM.loader.get("img/coin_shad.png", Texture.class), 0f, 0f);
-		
-			
-			jumpSound = LM.loader.get("audio/coin_jump.ogg", Sound.class);
-			landSound = LM.loader.get("audio/coin_land.ogg", Sound.class);
 			
 			rollMusic = LM.loader.get("audio/coin_roll.ogg", Music.class);
 			rollMusic.setLooping(true);
 			rollMusic.play();
+			
+			onGround = true;//Assures you don't fast-switch to INAIR & back.
 			
 			return true;
 		}
@@ -278,7 +336,10 @@ public class Coin extends WeakCollider {
 	}
 
 	public String getDebug() {
-		return "weight: "+weight;
+		return "weight: "+weight
+				+"\nPotential Pickup: "+(potPickup != null ? potPickup.name : "NULL")
+				+"\nPotential Pickup: "+(potInter != null ? potInter.getName() : "NULL")
+				+"\nHeld Ent: "+(heldEnt != null ? heldEnt.name : "NULL");
 	}
 
 }

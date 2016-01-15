@@ -15,6 +15,8 @@ public class LISLoadLord extends LoadLord{
 		LM.loadTexture("img/pot_back.png");
 		LM.loadTexture("img/pot_front.png");
 		LM.loadTexture("img/plantShad.png");
+		LM.loadTexture("img/pot_eff_mask.png");
+		LM.loadTexture("img/pot_eff.png");
 		ColProfile.setUp();
 	}
 

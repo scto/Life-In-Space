@@ -359,7 +359,7 @@ public abstract class Level{
 	}
 	
 	public boolean isEntityWithinViewFrustum(Entity e){
-		if(camList.get(camIndex).frustum.boundsInFrustum(new Vector3(e.getCenterPos().x, e.getCenterPos().y+e.getCenterPos().z, 0), new Vector3(e.dim.x+20, e.dim.y + e.dim.z + 20, 0)))
+		if(camList.get(camIndex).frustum.boundsInFrustum(new Vector3(e.getCenterPos().x, e.getCenterPos().y+e.getCenterPos().z, 0), new Vector3(e.dim.x+500, e.dim.y + e.dim.z + 500, 0)))
 			return true;
 		else return false;
 	}
