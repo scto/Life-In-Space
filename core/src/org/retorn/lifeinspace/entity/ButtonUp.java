@@ -27,6 +27,8 @@ public class ButtonUp extends Entity {
 	private float dis;
 	public static boolean pressed;
 	
+	private boolean pressed1, canPress1;
+	
 	public int vst;
 	public final int VISIBLE = 0;
 	public final int INVISIBLE = 1;
@@ -58,14 +60,21 @@ public class ButtonUp extends Entity {
 	}
 
 	public void tick(Level lvl) {
+		pressed1 = false;
 		pressed = false;
+		if(!Gdx.input.isTouched(1)) canPress1 = true;
+		if(Gdx.input.isTouched(1) && canPress1){
+			pressed1 = true;
+			canPress1 = false;
+		}
+		
 		
 		//Pressed with first finger
 		if((bounds.contains(InputManager.getWorldMouse(LM.defaultCam)) && InputManager.pressedLMB) )
 			press(lvl, 0);
 		
 		//Pressed with second finger
-		if((bounds.contains(Gdx.input.getX(1)/Main.resFac.x, LM.HEIGHT-Gdx.input.getY(1)/Main.resFac.y) && (Gdx.input.isTouched(1))))
+		if((bounds.contains(Gdx.input.getX(1)/Main.resFac.x, LM.HEIGHT-Gdx.input.getY(1)/Main.resFac.y) && pressed1))
 			press(lvl, 1);
 		
 		if(st == NORMAL)

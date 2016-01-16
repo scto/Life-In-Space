@@ -21,7 +21,7 @@ import com.badlogic.gdx.math.Vector3;
 public class Sol extends HardCollider {
 	private static Pixmap top, side;
 	public static Sprite drawTop, drawSide;
-	protected Color c;
+	public Color c;
 	protected static ShaderProgram shadowShader;
 	protected static ShaderProgram sideShadowShader;
 	protected static ShaderProgram sideBlankShader;

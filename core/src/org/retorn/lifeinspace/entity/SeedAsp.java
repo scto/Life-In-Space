@@ -33,6 +33,7 @@ public class SeedAsp extends Pickup {
 	
 	public void plant(Level lvl, Pot p){
 		lvl.addEnt(new Plunt("plunt"+LM.dice.nextFloat(), p));
+		Main.plantSound.play(0.5f, 1f, 0.5f);
 		remove();
 	}
 	

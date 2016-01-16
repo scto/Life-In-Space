@@ -1,5 +1,8 @@
 package org.retorn.lifeinspace.level;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
 import org.retorn.lifeinspace.engine.Camera;
 import org.retorn.lifeinspace.engine.Entity;
 import org.retorn.lifeinspace.engine.InputManager;
@@ -10,7 +13,6 @@ import org.retorn.lifeinspace.engine.Tween;
 import org.retorn.lifeinspace.entity.ButtonUp;
 import org.retorn.lifeinspace.entity.Coin;
 import org.retorn.lifeinspace.entity.Debutton;
-import org.retorn.lifeinspace.entity.NDFTest;
 import org.retorn.lifeinspace.entity.Plunt;
 import org.retorn.lifeinspace.entity.Pot;
 import org.retorn.lifeinspace.entity.SeedAsp;
@@ -31,9 +33,9 @@ public class Main extends Level{
 	public static float blurT = 0f;
 	public static float blurSpeed = 1f;
 	public static float oAlpha = 1f;
-	public static float oAlphaT = 0.1f;
+	public static float oAlphaT = 0f;
 	public static float bAlpha = 1f;
-	public static float bAlphaT = 0f;
+	public static float bAlphaT = 0.3f;
 	public static float bright = 1f;
 	public static Vector2 resFac;
 	public static ShaderProgram blurShader, tintShader;
@@ -42,7 +44,9 @@ public class Main extends Level{
 	private static FrameBuffer fbo;
 	private static Color tint;
 	private static ColProfile cp, cpTarg, cpDef, cpDark;
-	public static Sound jumpSound, landSound;
+	public static Sound jumpSound, landSound, clickSound, plantSound;
+	
+	public static ArrayList<Sol> bufferSols, activeSols;
 
 	public Main() {
 		super(Color.BLACK, "main", 60);
@@ -54,29 +58,29 @@ public class Main extends Level{
 		
 		LM.loadSound("audio/coin_jump.ogg");
 		LM.loadSound("audio/coin_land.ogg");
+		LM.loadSound("audio/click.ogg");
+		LM.loadSound("audio/plant.ogg");
+		
+		setUpSols();
 		
 		//addDebuttons();
 		addEnt(new ButtonUp("ib", 10, 10));
 		
-		addEnt(new Sol("floor1", 1000, 1000, 300, 0, -1000, -150, Color.valueOf("EDCDB7"), 0.1f, "img/stonetex.png", 1f));
-		addEnt(new Sol("floor2", 1000, 1000, 300, 1800, -1000, -150, Color.valueOf("AAAAAA"), 0.1f, "img/stonetex.png", 1f));
-		addEnt(new Sol("floor3", 1000, 1000, 300, 3600, -1000, -150, Color.valueOf("DFE3C8"), 0.1f, "img/stonetex.png", 1f));
+		addEnt(new Sol("Ship Floor", 1000, 1000, 300, 0, 9000, -150, Color.valueOf("EDCDB7"), 0.1f, "img/stonetex.png", 1f));
 		
-		//addEnt(new Plunt("plunt2", 60, 400, 40, 200, 0, 100, "img/plant1.png"));
+		addEnt(new Pot("pot-2", 300, 10100, 80));
+		addEnt(new Pot("pot-1", 400, 10100, 80));
+		addEnt(new Pot("pot0", 500, 10100, 80));
+		addEnt(new Pot("pot1", 600, 10100, 80));
+		addEnt(new Pot("pot2", 700, 10100, 80));
+		addEnt(new Pot("pot3", 800, 10100, 80));
+		addEnt(new Pot("pot4", 900, 10100, 80));
 		
-		addEnt(new Pot("pot-2", 300, 100, 80));
-		addEnt(new Pot("pot-1", 400, 100, 80));
-		addEnt(new Pot("pot0", 500, 100, 80));
-		addEnt(new Pot("pot1", 600, 100, 80));
-		addEnt(new Pot("pot2", 700, 100, 80));
-		addEnt(new Pot("pot3", 800, 100, 80));
-		addEnt(new Pot("pot4", 900, 100, 80));
+		addEnt(new SeedAsp("seed0", 100, 10100, 80));
+		addEnt(new SeedAsp("seed1", 50, 10100, 80));
+		addEnt(new SeedAsp("seed2", 0, 10100, 80));
 		
-		addEnt(new SeedAsp("seed0", 100, 100, 80));
-		addEnt(new SeedAsp("seed1", 50, 100, 80));
-		addEnt(new SeedAsp("seed2", 0, 100, 80));
-		
-		addEnt(new Coin("coin", 10, 10, -10));
+		addEnt(new Coin("coin", 0, 10000, -10));
 		
 		camList.put("spaceCam", new Camera(1280, 720));
 		camList.get("spaceCam").setPos(2100, 500);
@@ -88,13 +92,19 @@ public class Main extends Level{
 	}
 
 	public void postLoad() {
+		BG.doneLoad();
+		
 		jumpSound = LM.loader.get("audio/coin_jump.ogg", Sound.class);
 		landSound = LM.loader.get("audio/coin_land.ogg", Sound.class);
+		clickSound = LM.loader.get("audio/click.ogg", Sound.class);
+		plantSound = LM.loader.get("audio/plant.ogg", Sound.class);
+		
+		getCam().setPos(entity("coin"));
 	}
 	
 	public void superRender(){
 		startFBO();
-		
+		BG.render(this);
 		LM.useDefaultCamera();
 		//LM.drawText("Coinship", 100, 420, Color.WHITE, 5f);
 		LM.useLevelCamera();
@@ -135,7 +145,7 @@ public class Main extends Level{
 		bAlpha += Tween.tween(bAlpha, bAlphaT, 1f);
 		cp.tween(cpTarg, 0.1f);
 		
-		LM.useDefaultCamera();
+		//LM.useDefaultCamera();
 		//LM.drawText("fps: "+Gdx.graphics.getFramesPerSecond(), 0, 100);
 		LM.useLevelCamera();
 	}
@@ -145,18 +155,20 @@ public class Main extends Level{
 		tickResFacs();
 		
 		camList.get("default").setTarget(entity("coin"), 3f);
-		if(camList.get("default").tPos.y < -100*camList.get("default").zoom) camList.get("default").tPos.y = -100*camList.get("default").zoom;
+		if(entity("coin").pos.y < Coin.standardHeight) camList.get("default").tPos.y = Coin.standardHeight*camList.get("default").zoom;
 		else camList.get("default").tPos.y += 120*camList.get("default").zoom+(float)Math.cos(inc*0.1f)*10;
-		camList.get("default").setZoomTarget(2.0f, 3f);
+		camList.get("default").setZoomTarget(3f, 3f);
 		
 		BG.tick(this);
 		bg.set(BG.col);
+		
+		manageSols();
 		
 		if(InputManager.pressedR){
 			entity("coin").pos.x = 100;
 			getCam().pos.x = entity("coin").getCenterPos().x;
 			bright = 1.5f;
-			addEnt(new SeedAsp("seed2"+LM.dice.nextFloat(), 10, 100, 80));
+			addEnt(new SeedAsp("seed2"+LM.dice.nextFloat(), 10, 10100, 80));
 		}
 	}
 	
@@ -170,48 +182,85 @@ public class Main extends Level{
 		}
 	}
 	
-	private void addDebuttons(){
-		addEnt(new Debutton("Change ColProfile", 10, 250, 1.5f, false){
-			public void execute(){
-			if(cpTarg == cpDef){
-				cpTarg = cpDark;
-				//cp.set(cpDark);
-				bright = 0f;
-				bAlphaT = 1f;
-				bAlpha = 1f;
-				oAlphaT = 0f;
-				oAlpha = 0f;
+	//ONLY DO THIS ALSO IF YOU'RE NOT IN THE SHIP
+	private void manageSols(){
+		//REMOVE
+		Iterator i = activeSols.iterator();
+		while(i.hasNext()){
+			Sol s =(Sol) i.next();
+			if((entity("coin").pos.x - (s.pos.x + s.dim.x) > 3000) || (s.pos.x - (entity("coin").pos.x + entity("coin").dim.x) > 3000)){
+				eList.remove(s.name);
+				bufferSols.add(s);
+				i.remove();
 			}
-			else{
-				cpTarg = cpDef;
-				bAlphaT = 0f;
-				oAlphaT = 0f;
-			}
-			}});
-		addEnt(new Debutton("Go Groundful", 10, 200, 1.5f, false){
-			public void execute(){
-			entity("coin", Coin.class).st = 1;
-			}});
-		addEnt(new Debutton("Go Gravless", 10, 150, 1.5f, false){
-			public void execute(){
-			entity("coin", Coin.class).st = 2;
-			}});
-		addEnt(new Debutton("resetY", 10, 100, 1.5f, false){
-			public void execute(){
-			entity("coin").pos.y = 700;
-			}});
-		addEnt(new Debutton("resetX", 10, 50, 1.5f, false){
-			public void execute(){
-			entity("coin").pos.x = 0;
-			}});
-		addEnt(new Debutton("View Debuttons", 10, 0, 1.5f, true){
-			public void execute(){
-			for(Entity e: eList.values()){
-				if(e instanceof Debutton && e != this)
-					 ((Debutton)e).on = !((Debutton)e).on;
-			}
-			}});
+		}
+		
+		//GET EXTENTS
+		Sol lowestRight = null;
+		Sol highestLeft = null;
+		
+		for(Sol s: activeSols){
+			if(lowestRight == null || s.pos.x < lowestRight.pos.x) lowestRight = s;
+			if(highestLeft == null || s.pos.x + s.dim.x > highestLeft.pos.x + highestLeft.dim.x) highestLeft = s;
+		}
+		
+		float WIDTH = 200;
+		float GAP = 1000;
+
+		//RIGHT
+		if(entity("coin").getCenterPos().x - lowestRight.pos.x < 2000){
+			float w = 1000 + LM.dice.nextFloat()*WIDTH;
+			putSol(
+					lowestRight.pos.x - w - (LM.dice.nextFloat()*GAP),
+					lowestRight.pos.y - 250 + LM.dice.nextFloat()*500,
+					w
+					);
+		}
+		//LEFT
+		if(highestLeft.pos.x+highestLeft.dim.x - entity("coin").getCenterPos().x < 2000)
+			putSol(
+					highestLeft.pos.x + highestLeft.dim.x + LM.dice.nextFloat()*GAP,
+					highestLeft.pos.y - 250 + LM.dice.nextFloat()*500,
+					1000 + LM.dice.nextFloat()*WIDTH
+					);
+		
+	}
 	
+	private void putSol(float x, float y, float w){
+		if(!bufferSols.isEmpty()){
+			Sol s = bufferSols.get(0);
+			bufferSols.remove(0);
+		
+			s.dim.x = w;
+			s.pos.x = x;
+			s.pos.y = y;
+			
+			s.c.set(Color.valueOf("EDCDB7"));
+			s.c.r += 0.2f*LM.dice.nextFloat()-0.1f;
+			s.c.g += 0.2f*LM.dice.nextFloat()-0.1f;
+			s.c.b+= 0.2f*LM.dice.nextFloat()-0.1f;
+			
+			activeSols.add(s);
+			eList.put(s.name, s);
+		}
+	}
+	
+	private void setUpSols(){
+		bufferSols = new ArrayList<Sol>();
+		activeSols = new ArrayList<Sol>();
+		
+		for(int i = 0; i < 10; i++){
+			bufferSols.add(new Sol("stock"+i, 1000, 1000, 300, 0, 9000, -150, Color.valueOf("EDCDB7"), 0.1f, "img/stonetex.png", 1f));
+			bufferSols.get(i).init(this);
+		}
+		
+		LM.loader.finishLoading();
+		
+		for(int i = 0; i < 10; i++){
+			bufferSols.get(i).doneLoad(this);
+		}
+		
+		putSol(-500, -1000, 1000);
 	}
 	
 	private void tickResFacs(){
@@ -289,6 +338,51 @@ public class Main extends Level{
 		
 		cpTarg = cpDef;
 		cp.set(cpTarg);
+	}
+	
+	
+	private void addDebuttons(){
+		addEnt(new Debutton("Change ColProfile", 10, 250, 1.5f, false){
+			public void execute(){
+			if(cpTarg == cpDef){
+				cpTarg = cpDark;
+				//cp.set(cpDark);
+				bright = 0f;
+				bAlphaT = 1f;
+				bAlpha = 1f;
+				oAlphaT = 0f;
+				oAlpha = 0f;
+			}
+			else{
+				cpTarg = cpDef;
+				bAlphaT = 0f;
+				oAlphaT = 0f;
+			}
+			}});
+		addEnt(new Debutton("Go Groundful", 10, 200, 1.5f, false){
+			public void execute(){
+			entity("coin", Coin.class).st = 1;
+			}});
+		addEnt(new Debutton("Go Gravless", 10, 150, 1.5f, false){
+			public void execute(){
+			entity("coin", Coin.class).st = 2;
+			}});
+		addEnt(new Debutton("resetY", 10, 100, 1.5f, false){
+			public void execute(){
+			entity("coin").pos.y = 700;
+			}});
+		addEnt(new Debutton("resetX", 10, 50, 1.5f, false){
+			public void execute(){
+			entity("coin").pos.x = 0;
+			}});
+		addEnt(new Debutton("View Debuttons", 10, 0, 1.5f, true){
+			public void execute(){
+			for(Entity e: eList.values()){
+				if(e instanceof Debutton && e != this)
+					 ((Debutton)e).on = !((Debutton)e).on;
+			}
+			}});
+	
 	}
 
 	public void enter() {

@@ -38,11 +38,15 @@ public class Coin extends WeakCollider {
 	private float refAlpha;
 	private float refAlphaT = 0.5f;
 
+	public boolean dragging;//If you are currently dragging. Used to let you drag outside the edge-buffer if you already are.
+	
 	public boolean canPickUp;
 	public boolean carrying;
 	public Pickup heldEnt;
 	public Pickup potPickup;//PotEnt is potentialEnt ie one that you're in front of/highlighting.
 	public Inter potInter;
+	
+	public static float standardHeight = -100;
 	
 	private float rot;
 	private float rotV;//Amount added to rot each frame.
@@ -65,6 +69,7 @@ public class Coin extends WeakCollider {
 	}
 
 	public void tick(Level lvl) {
+		if(pos.y < standardHeight-1000) die();
 		managePickups(lvl);
 		
 		if(st == ONGROUND){
@@ -97,15 +102,21 @@ public class Coin extends WeakCollider {
 		if(InputManager.pressedE) pos.y = 1000;
 	}
 	
+	private void die(){
+		pos.y = standardHeight + 2500;
+		//Destroy any item you might be holding?
+		//Decrease the growth of a plant you're holding?
+	}
+	
 	private void pickUp(Pickup p, Level lvl){
 		heldEnt = p;
 		carrying = true;
 		p.pickup(lvl);
-		outPrint("shit");
 	}
 	
 	public void drop(Level lvl){
 		heldEnt.drop(lvl);
+		heldEnt.v.y = v.y;
 		heldEnt = null;
 		carrying = false;
 		lvl.getCam().setShake(7, 60, 50);
@@ -169,7 +180,14 @@ public class Coin extends WeakCollider {
 	}
 	
 	private void manageInput(Level lvl){
-		if(InputManager.downLMB){
+		if(InputManager.upLMB)
+			dragging = false;
+		
+		float x = InputManager.M.x/Main.resFac.x;
+		boolean withinBound =( x > 50 && x < LM.WIDTH-50);
+
+		if(InputManager.downLMB && !(!withinBound && !dragging)){
+			dragging = true;
 			float wMX =(InputManager.getWorldMouse(lvl.getCam()).x-getCenterPos().x)*maxV;
 			
 			v.x += Tween.tween(v.x, wMX, accel * (!onGround ? 0.1f : 1f));
@@ -207,6 +225,8 @@ public class Coin extends WeakCollider {
 	
 	@Override
 	public void collide(Entity b, float collisionTime, Vector3 normal, Level lvl) {
+		if(!normal.isZero() && b.name.contains("stock")) standardHeight = b.pos.y + b.dim.y - 500;
+		
 		if(normal.x != 0 && b instanceof HardCollider && st == INAIR){
 			v.x *= -0.25f;//Bounce
 			v.y += Math.abs(v.x)*0.9f;
@@ -339,7 +359,8 @@ public class Coin extends WeakCollider {
 		return "weight: "+weight
 				+"\nPotential Pickup: "+(potPickup != null ? potPickup.name : "NULL")
 				+"\nPotential Pickup: "+(potInter != null ? potInter.getName() : "NULL")
-				+"\nHeld Ent: "+(heldEnt != null ? heldEnt.name : "NULL");
+				+"\nHeld Ent: "+(heldEnt != null ? heldEnt.name : "NULL")
+				+"\nStandard Height: "+standardHeight;
 	}
 
 }

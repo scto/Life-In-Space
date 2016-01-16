@@ -18,7 +18,7 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Vector3;
 
 public class Pot extends Pickup {
-	private TextureRegion front, back;
+	private TextureRegion front, back, glowOrange;
 	private Texture effMask, eff;
 	public static ShaderProgram plantShader;
 	private Shadow shadow;
@@ -26,6 +26,14 @@ public class Pot extends Pickup {
 	public ColProfile cp;
 	public float bright = 1f;
 	public float effFac = 1f;
+	
+	public float glowAlpha;
+	public float glowInc;
+	
+	private int gSt;
+	
+	private final int GLOWLESS = 0;
+	private final int GLOWFUL = 1;
 	
 	private int st;
 	
@@ -46,6 +54,9 @@ public class Pot extends Pickup {
 				128, 128);
 		
 		LM.batch.setShader(null);
+		
+		 drawGlow(0, lvl);
+		
 		if(plunt != null) plunt.render(lvl);
 		
 		if(plunt != null) drawEffect();
@@ -59,6 +70,43 @@ public class Pot extends Pickup {
 		LM.batch.setShader(null);
 		
 		LM.useLevelCamera();
+	}
+	
+	public void drawGlow(int id, Level lvl){
+		manageGlowAlpha(lvl);
+		
+		LM.batch.setShader(LM.brightShader);
+		LM.brightShader.setUniformf("alpha", glowAlpha*0.8f+LM.dice.nextFloat()*0.05f-0.025f);
+		LM.brightShader.setUniformf("bright", 1f+LM.dice.nextFloat()*0.2f);
+		
+		if(id == 0)
+			LM.batch.draw(
+					glowOrange, 
+					pos.x-25, pos.y+pos.z-10, 
+					128, 128);
+		
+		
+		LM.batch.setShader(null);
+	}
+	
+	private void manageGlowAlpha(Level lvl){
+		if((lvl.entity("coin", Coin.class).potInter == this && lvl.entity("coin", Coin.class).heldEnt instanceof SeedAsp) || plunt != null){
+		//if(plunt != null){
+			if(gSt == GLOWLESS){
+				glowInc = 0f;
+				Main.clickSound.play(0.02f, 10f, 0.5f);
+			}
+			gSt = GLOWFUL;
+			if(glowInc < 0.15f) glowInc += LM.endTime;
+			glowAlpha = Tween.cubicTween(glowInc, 0f, plunt != null ? 1f : 0.4f, 0.15f);
+		}
+		
+		else{
+			if(gSt == GLOWFUL) glowInc = 0f;
+			gSt = GLOWLESS;
+			if(glowInc < 0.5f) glowInc += LM.endTime;
+			glowAlpha = Tween.cubicTween(glowInc, plunt != null ? 1f : 0.4f, -1f, plunt != null ? 0.5f : 0.2f);
+		}
 	}
 	
 	public void drawEffect(){
@@ -126,8 +174,6 @@ public class Pot extends Pickup {
 	//Called by plunts when they are planted in this.
 	public void plant(Plunt p){
 		plunt = p;
-		//DO SOME LIKE EFFECT
-		//PLAY SOUND EFFECT
 	}
 	
 	private void provideShadow(Level lvl){
@@ -175,11 +221,14 @@ public class Pot extends Pickup {
 		if( LM.loader.isLoaded("img/pot_back.png")
 			&& LM.loader.isLoaded("img/pot_front.png")
 			&& LM.loader.isLoaded("img/plantShad.png")
+			&& LM.loader.isLoaded("img/pot_glow_back.png")
 			&& LM.loader.isLoaded("img/pot_eff_mask.png")
 			&& LM.loader.isLoaded("img/pot_eff.png")){
 				
 				back = new TextureRegion(LM.loader.get("img/pot_back.png", Texture.class));
 				front = new TextureRegion(LM.loader.get("img/pot_front.png", Texture.class));
+				
+				glowOrange = new TextureRegion(LM.loader.get("img/pot_glow_back.png", Texture.class));
 				
 				shadow = new Shadow(LM.loader.get("img/plantShad.png", Texture.class), 0f, 0f);
 				
@@ -209,7 +258,7 @@ public class Pot extends Pickup {
 	}
 
 	public String getDebug() {
-		return null;
+		return "gSt: "+gSt;
 	}
 
 }

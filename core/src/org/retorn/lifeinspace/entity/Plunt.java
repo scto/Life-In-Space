@@ -44,16 +44,17 @@ public class Plunt extends WeakCollider {
 		plantShader.setUniformf("gFac", 1f-gFac);
 		plantShader.setUniformf("wiggleFac", 5f);
 		plantShader.setUniformf("wiggleMag", 0.03f);
-		//gFac += Tween.tween(gFac, gFacT, 1.1f);
+		gFac += Tween.tween(gFac, gFacT, 0.1f);
+		gFacT = 0.3f;
 		
 		LM.batch.draw(plant, 
 				getCenterPos().x-plant.getRegionWidth()/2f +1,
-				getCenterPos().y+getCenterPos().z-370,
+				getCenterPos().y+getCenterPos().z-375,
 				plant.getRegionWidth()/2f,
-				170,
+				180,
 				plant.getRegionWidth(),
 				plant.getRegionHeight(),
-				0.5f+gFac*0.15f,
+				0.5f+gFac*0.1f,
 				0.5f+gFac*0.05f,
 				0f
 				);
