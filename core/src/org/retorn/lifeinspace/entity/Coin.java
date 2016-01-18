@@ -7,6 +7,7 @@ import org.retorn.lifeinspace.engine.LM;
 import org.retorn.lifeinspace.engine.Level;
 import org.retorn.lifeinspace.engine.Shadow;
 import org.retorn.lifeinspace.engine.ShadowProvider;
+import org.retorn.lifeinspace.engine.Sol;
 import org.retorn.lifeinspace.engine.Tween;
 import org.retorn.lifeinspace.engine.WeakCollider;
 import org.retorn.lifeinspace.level.Main;
@@ -40,6 +41,8 @@ public class Coin extends WeakCollider {
 
 	public boolean dragging;//If you are currently dragging. Used to let you drag outside the edge-buffer if you already are.
 	
+	public static boolean dead;
+	
 	public boolean canPickUp;
 	public boolean carrying;
 	public Pickup heldEnt;
@@ -47,6 +50,8 @@ public class Coin extends WeakCollider {
 	public Inter potInter;
 	
 	public static float standardHeight = -100;
+	public static float standardX = 0;
+	public static Sol standardSol;
 	
 	private float rot;
 	private float rotV;//Amount added to rot each frame.
@@ -73,12 +78,13 @@ public class Coin extends WeakCollider {
 		managePickups(lvl);
 		
 		if(st == ONGROUND){
+			manageDeathPenalty(lvl);
 			manageInput(lvl);
 			if(InputManager.deltaDrag.y > 35*Main.resFac.y)  jump();
 			else if(!onGround) st = INAIR;
 			applyGrav(lvl);
 			rollVol = Math.abs(v.x)/1000f;
-			if(rollVol > 1f) rollVol = 1f;
+			if(rollVol > 2.2f) rollVol = 2.2f;
 		}
 		
 		else if(st == INAIR){
@@ -86,6 +92,7 @@ public class Coin extends WeakCollider {
 			manageInput(lvl);
 			if(onGround) land(lvl);
 			applyGrav(lvl);
+			if(v.y < -25000) v.y = -25000;
 			rollVol = 0f;
 		}
 		
@@ -98,12 +105,47 @@ public class Coin extends WeakCollider {
 		manageRot();
 		provideShadow(lvl);
 		
-		//debug
-		if(InputManager.pressedE) pos.y = 1000;
+	}
+	
+	private void manageDeathPenalty(Level lvl){
+		if(dead){//Kill a water-piece.
+			if(heldEnt != null){
+				if(heldEnt instanceof Pot){
+					if(((Pot)heldEnt).plunt != null){
+						if(((Pot)heldEnt).plunt.st != 1){
+						float loops = ((Pot)heldEnt).plunt.worth*0.1f + (LM.dice.nextInt(10) == 0 && ((Pot)heldEnt).plunt.worth != 0 ? 1f : 0f);
+						for(int i = 0; i < loops; i++){
+						if(((Pot)heldEnt).plunt.worth > 0){
+							if(LM.dice.nextInt(30) != 0) ((Pot)heldEnt).plunt.worth--;
+							lvl.addEnt(new WaterPiece(
+									"wp"+LM.dice.nextFloat(), 
+									getCenterPos().x-30, 
+									lvl.entity("coin").pos.y,
+									0, 
+									lvl.entity("coin").v.x*0.8f+200*LM.dice.nextFloat(), 3000 + 300*i, 0));
+							Main.breakSound.play(0.5f, 1f, 0.5f);
+						}
+						}
+						}
+					}
+				}
+			}
+			dead = false;
+			Main.clickSound.play(0.5f, 1f, 0.5f);
+		}
+	}
+	
+	public void gainWP(){
+		if(heldEnt != null)
+			if(heldEnt instanceof Pot)
+				((Pot)heldEnt).water();
+			
+		Main.breakSound.play(0.5f,1.5f, 0.5f);
 	}
 	
 	private void die(){
-		pos.y = standardHeight + 2500;
+		pos.y = standardHeight + 2000;
+		dead = true;
 		//Destroy any item you might be holding?
 		//Decrease the growth of a plant you're holding?
 	}
@@ -225,12 +267,16 @@ public class Coin extends WeakCollider {
 	
 	@Override
 	public void collide(Entity b, float collisionTime, Vector3 normal, Level lvl) {
-		if(!normal.isZero() && b.name.contains("stock")) standardHeight = b.pos.y + b.dim.y - 500;
+		if(normal.y == -1 && b.name.contains("stock")){
+			standardHeight = b.pos.y + b.dim.y - 200;
+			standardSol = (Sol)b;
+			standardX = pos.x;
+		}
 		
 		if(normal.x != 0 && b instanceof HardCollider && st == INAIR){
 			v.x *= -0.25f;//Bounce
 			v.y += Math.abs(v.x)*0.9f;
-			Main.landSound.play(LM.gameSoundEffectVolume*0.5f, 0.65f+LM.dice.nextFloat()*0.1f, 0.5f);
+			Main.landSound.play(LM.gameSoundEffectVolume*0.5f*Math.abs(v.x/4000f), 1.0f+LM.dice.nextFloat()*0.1f, 0.5f);
 		}
 		else if(st == GRAVLESS && b instanceof HardCollider){
 			if(normal.y != 0){
@@ -250,14 +296,16 @@ public class Coin extends WeakCollider {
 		onGround =  false;
 		jumped = true;
 		st = INAIR;
-		Main.jumpSound.play(LM.gameSoundEffectVolume*0.5f, 0.9f+LM.dice.nextFloat()*0.2f, 0.5f);
+		Main.jumpSound.play(LM.gameSoundEffectVolume*0.2f, 1.3f+LM.dice.nextFloat()*0.2f, 0.5f);
+		Main.landSound.play(LM.gameSoundEffectVolume*0.1f, 1.3f+LM.dice.nextFloat()*0.1f, 0.5f);
 	}
 	
 	private void land(Level lvl){
 		weight = 120;//Reset weight after it was tweened up in the air.
 		st = ONGROUND;
-		lvl.getCam().setShake(22f*lvl.getCam().zoom, 100f, 70f*lvl.getCam().zoom);
-		Main.landSound.play(LM.gameSoundEffectVolume*0.5f, 0.95f+LM.dice.nextFloat()*0.1f, 0.5f);
+		if(!dead) lvl.getCam().setShake(18f*lvl.getCam().zoom, 100f, 70f*lvl.getCam().zoom);
+		else  lvl.getCam().setShake(22f*lvl.getCam().zoom, 50f, 70f*lvl.getCam().zoom);
+		if(Main.inc > 1f)Main.landSound.play(LM.gameSoundEffectVolume*0.1f, 1.15f+LM.dice.nextFloat()*0.1f, 0.5f);
 		refAlpha = 3f;
 		Main.blurFast(0.3f);
 		
@@ -309,7 +357,7 @@ public class Coin extends WeakCollider {
 		LM.loadTexture("img/coin_shad.png");
 		LM.loadTexture("img/cloudtex.png");
 		
-		LM.loadMusic("audio/coin_roll.ogg");
+		LM.loadMusic("audio/coin_roll2.ogg");
 		
 		refShader = new ShaderProgram(Gdx.files.internal("shaders/coin.vsh"), Gdx.files.internal("shaders/coin.fsh"));
 		outPrint("REF SHADER COMPILED: "+refShader.isCompiled() +refShader.getLog());
@@ -323,7 +371,7 @@ public class Coin extends WeakCollider {
 		   && LM.loader.isLoaded("img/coin_rim.png")
 		   && LM.loader.isLoaded("img/coin_shad.png")
 		   && LM.loader.isLoaded("img/cloudtex.png")
-		   && LM.loader.isLoaded("audio/coin_roll.ogg")){
+		   && LM.loader.isLoaded("audio/coin_roll2.ogg")){
 			
 			front = new TextureRegion(LM.loader.get("img/coin_face_front.png", Texture.class));
 			rim = new TextureRegion(LM.loader.get("img/coin_rim.png", Texture.class));
@@ -333,7 +381,7 @@ public class Coin extends WeakCollider {
 			
 			shadow = new Shadow(LM.loader.get("img/coin_shad.png", Texture.class), 0f, 0f);
 			
-			rollMusic = LM.loader.get("audio/coin_roll.ogg", Music.class);
+			rollMusic = LM.loader.get("audio/coin_roll2.ogg", Music.class);
 			rollMusic.setLooping(true);
 			rollMusic.play();
 			
@@ -360,7 +408,8 @@ public class Coin extends WeakCollider {
 				+"\nPotential Pickup: "+(potPickup != null ? potPickup.name : "NULL")
 				+"\nPotential Pickup: "+(potInter != null ? potInter.getName() : "NULL")
 				+"\nHeld Ent: "+(heldEnt != null ? heldEnt.name : "NULL")
-				+"\nStandard Height: "+standardHeight;
+				+"\nStandard Height: "+standardHeight
+				+"\nDead: "+dead;
 	}
 
 }

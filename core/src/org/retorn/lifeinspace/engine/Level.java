@@ -332,8 +332,8 @@ public abstract class Level{
 			if(a.pos.z >= b.pos.z + b.dim.z) return -1;
 			
 			Vector3 cPos = new Vector3(0, 10000, 10000);
-			Vector3 ap = new Vector3(a.pos.x+a.dim.x/2f, a.pos.y+a.dim.y, a.pos.z);
-			Vector3 bp = new Vector3(b.pos.x+b.dim.x/2f, b.pos.y+b.dim.y, b.pos.z);
+			Vector3 ap = new Vector3(0, a.pos.y+a.dim.y, a.pos.z);
+			Vector3 bp = new Vector3(0, b.pos.y+b.dim.y, b.pos.z);
 			
 			if(cPos.y-(a.pos.y+a.dim.y) < cPos.y-(b.pos.y+b.dim.y)
 			 &&cPos.z - (a.pos.z+a.dim.z) > cPos.y-(b.pos.z) 
@@ -366,6 +366,7 @@ public abstract class Level{
 
 	//The IDs are basically separate methods. 0 is shapes, 1 text.
 	public void renderDebug(int id){
+		try{
 		//For use while shaper is open.
 		if(LM.debug){
 		if(id == 0 && !debugIndex.equals("")){
@@ -425,7 +426,10 @@ public abstract class Level{
 			LM.useLevelCamera();
 		}
 	}
-		
+	}
+	catch(NullPointerException e){
+		outPrint("couldn't render, debugIndex was null");
+	}
 	
 	}
 	

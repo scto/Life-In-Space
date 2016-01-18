@@ -55,6 +55,6 @@ void main(void) {
 	gl_FragColor = fin;
 	gl_FragColor.a = init.a;
 	
-	gl_FragColor = mix(gl_FragColor, BlendOverlay(gl_FragColor, tint), overlayAlpha);
+	gl_FragColor = mix(gl_FragColor, BlendOverlay(gl_FragColor, tint), overlayAlpha*v_texCoords.y*0.5);
 }
 

@@ -10,24 +10,24 @@ import com.badlogic.gdx.math.Vector3;
 
 public class ShadowProvider extends Entity {
 	public Shadow tr;
-	public float tY;//Topmost Y it collided with. BASICALLY USELESS YFETCH IS BETTER FUCK MULTITASKING.
+	public float tY;//Topmost Y it collided with.
 	
 	public ShadowProvider(String n, float w, float d, float x, float y, float z, Shadow t, float py) {
 		super(n, w, 1, d, x, y, z, 3);
-		v.y = -1000000/LM.gameSpeed;
+		v.y = -3000/LM.gameSpeed/LM.delta;
 		rendering = false;
 		tr = t;
 		t.pY = py;
-		tY = -1000000/LM.gameSpeed;
+		tY = -10000000/LM.gameSpeed;
 	}
 	
 	public ShadowProvider(String n, float w, float d, float x, float y, float z, Sprite t) {
 		super(n, w, 1, d, x, y, z, 3);
-		v.y = -1000000/LM.gameSpeed;
+		v.y = -3000/LM.gameSpeed/LM.delta;
 		rendering = false;
 		tr = new Shadow(t, 0f, 0f);
 		tr.pY = pos.y;
-		tY = -1000000/LM.gameSpeed;
+		tY = -10000000/LM.gameSpeed;
 	}
 
 	@Override

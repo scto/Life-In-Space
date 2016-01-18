@@ -85,6 +85,7 @@ public class Sol extends HardCollider {
 		LM.batch.setShader(sideBlankShader);
 		sideBlankShader.setUniformi("u_texture2", 2);
 		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("fadeFactor"), fadeFactor);
+		sideBlankShader.setUniformf("u_size", dim.x, dim.y);
 		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("fOn"), darkFactor);
 		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("u_height"), dim.y);
 		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("u_texHeight"), drawSide.getRegionHeight());
@@ -124,7 +125,7 @@ public class Sol extends HardCollider {
 		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("ysamp"), 1-projPos.y/HEIGHT);
 		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("fadeFactor"), fadeFactor);
 		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("fOn"), darkFactor);
-		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("alpha"), 0.5f);
+		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("alpha"), 1f);
 		LM.batch.draw(drawSide, pos.x, pos.y+pos.z, dim.x, dim.y);
 		LM.batch.setShader(null);
 		

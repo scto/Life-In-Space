@@ -17,9 +17,9 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 public class BG {
 	public static Color col, tCol;
 	private static Texture draw;
-	private static Texture tex, tex2;
+	private static Texture tex, tex2, stex;
 	private static ShaderProgram bgShader;
-	private static ColProfile cp;
+	private static ColProfile cp, cpTarg, cpBlue, cpSpace, cpRedSpace;
 	
 	public static void setUp(){
 		col = Color.valueOf("A3C9C3");
@@ -35,6 +35,7 @@ public class BG {
 		
 		LM.loadTexture("img/ctex.png");
 		LM.loadTexture("img/ctex2.png");
+		LM.loadTexture("img/stex.png");
 		
 		bgShader = new ShaderProgram(Gdx.files.internal("shaders/bgWig.vsh"), Gdx.files.internal("shaders/bgWig.fsh"));
 		System.out.println("BG SHADER COMPILED: "+bgShader.isCompiled() +bgShader.getLog());
@@ -46,21 +47,39 @@ public class BG {
 		tex2 = LM.loader.get("img/ctex2.png", Texture.class);
 		tex.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
 		
-		cp = new ColProfile(
-				new String[]{"436c89", "436c89", "436c89", "8dafa7", "e6e1cc", "ece8e8"},
-				new float[]{0.0f, 0.0f, 0.63f, 0.84f});
+		stex = LM.loader.get("img/stex.png", Texture.class);
+		stex.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
+		
+		cpBlue = new ColProfile(
+				new String[]{"436c89", "436c89", "8dafa7", "dfd8b9", "fff9de", "ece8e8"},
+				new float[]{0.0f, 0.52f, 0.69f, 0.87f});
+		
+		cpSpace = new ColProfile(
+				new String[]{"000000", "1a0008", "191627", "ae7949", "ffe5b4", "ffe5b4"},
+				new float[]{0.19f, 0.38f, 0.61f, 0.77f});
+		
+		cpRedSpace = new ColProfile(
+				new String[]{"000000", "1a0008", "191627", "ae4949", "ee987a", "ffe5b4"},
+				new float[]{0.19f, 0.38f, 0.62f, 0.86f});
+		
+		cp = ColProfile.getDefault();
+		cp.set(cpSpace);
+		
+		cpTarg = ColProfile.getDefault();
+		cpTarg.set(cpSpace);
 	}
 	
 	
 	public static void render(Level lvl){
-		tex.bind(1);
+		if(!Main.inShip)tex.bind(1);
+		else stex.bind(1);
 		Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
 		
 		LM.batch.setShader(bgShader);
 		bgShader.setUniformf("iResolution", LM.WIDTH, LM.HEIGHT);
-		bgShader.setUniformf("iGlobalTime", Main.inc*0.01f);
-		bgShader.setUniformf("intensity", 2f);
-		bgShader.setUniformf("cDis", lvl.getCam().pos.x*0.00002f, -lvl.getCam().pos.y*0.00002f-0.6f);
+		bgShader.setUniformf("iGlobalTime", Main.inShip ? Main.inc*0.001f + lvl.getCam().pos.x*0.00001f :  Main.inc*0.01f);
+		bgShader.setUniformf("intensity",Main.inShip ? 300f : 2f);
+		bgShader.setUniformf("cDis", lvl.getCam().pos.x*(Main.inShip ? 0.00001f : 0.00002f)+Main.inc*0.001f, -lvl.getCam().pos.y*0.00002f-0.6f);
 		float scale = LM.HEIGHT/(float)tex.getHeight();
 		bgShader.setUniformf("u_size", tex.getWidth()*scale, tex.getHeight()*scale);
 		bgShader.setUniformi("u_texture1", 1);
@@ -74,7 +93,7 @@ public class BG {
 		LM.useDefaultCamera();
 		LM.batch.setShader(LM.brightShader);
 		LM.brightShader.setUniformf("bright", 1);
-		LM.brightShader.setUniformf("alpha", 0.3f);
+		LM.brightShader.setUniformf("alpha", Main.inShip ? 0.1f :0.3f);
 		LM.batch.draw(tex2, 0, 0, LM.WIDTH, LM.HEIGHT);
 		LM.useLevelCamera();
 	}
@@ -94,6 +113,10 @@ public class BG {
 	}
 	
 	public static void tick(Level lvl){
+		if(!Main.inShip) cpTarg = cpBlue;
+		else cpTarg = cpSpace;
+		
+		cp.tween(cpTarg, 0.025f);
 		col.lerp(tCol, 0.05f);
 	}
 

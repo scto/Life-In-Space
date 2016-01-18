@@ -19,7 +19,7 @@ public class ButtonUp extends Entity {
 	
 	private Rectangle bounds;
 	
-	private float inc;
+	private float inc = 100f;
 	private float animTime = 0.08f;
 	private float animDist = 25;
 	private float scale;
@@ -29,7 +29,7 @@ public class ButtonUp extends Entity {
 	
 	private boolean pressed1, canPress1;
 	
-	public int vst;
+	public int vst = 1;
 	public final int VISIBLE = 0;
 	public final int INVISIBLE = 1;
 	

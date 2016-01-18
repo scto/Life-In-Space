@@ -43,7 +43,7 @@ public abstract class LM extends ApplicationAdapter{
 	public static boolean usingLevelCamera;
 	public static boolean usingDefaultCamera;
 	public static boolean debug;
-	public static boolean allowDebug = true;//Used for release-versions.
+	public static boolean allowDebug = false;//Used for release-versions.
 	public static ShaderProgram defaultShader;
 	public static ShaderProgram fontShader;//Used by Levels for rendering debug text.
 	public static ShaderProgram brightShader;//General shader ft. alpha & bright.

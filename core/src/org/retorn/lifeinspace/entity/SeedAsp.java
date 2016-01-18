@@ -35,6 +35,11 @@ public class SeedAsp extends Pickup {
 		lvl.addEnt(new Plunt("plunt"+LM.dice.nextFloat(), p));
 		Main.plantSound.play(0.5f, 1f, 0.5f);
 		remove();
+		
+		//Making other plants jiggle.
+		for(Entity e: lvl.eList.values()){
+			if(e instanceof Plunt) ((Plunt) e).jiggle(1.3f + LM.dice.nextFloat()*0.2f);
+		}
 	}
 	
 	public boolean interact(Entity e, Level lvl) {
@@ -58,6 +63,9 @@ public class SeedAsp extends Pickup {
 		
 		managePSt(lvl);
 		provideShadow(lvl);
+		
+		if(pos.y < -10000) remove();
+		
 	}
 	
 	private void provideShadow(Level lvl){

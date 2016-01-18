@@ -8,6 +8,7 @@ import org.retorn.lifeinspace.engine.ShadowProvider;
 import org.retorn.lifeinspace.engine.Tween;
 import org.retorn.lifeinspace.level.Main;
 import org.retorn.lifeinspace.tech.ColProfile;
+import org.retorn.lifeinspace.tech.PotProfile;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -40,7 +41,9 @@ public class Pot extends Pickup {
 	private final int ONGROUND = 0;
 	private final int INAIR = 1;
 	
-	private Plunt plunt;
+	public boolean done;
+	
+	public Plunt plunt;
 	
 	public Pot(String n, float x, float y, float z) {
 		super(n, 80, 75, 30, x, y, z, 1);
@@ -76,8 +79,8 @@ public class Pot extends Pickup {
 		manageGlowAlpha(lvl);
 		
 		LM.batch.setShader(LM.brightShader);
-		LM.brightShader.setUniformf("alpha", glowAlpha*0.8f+LM.dice.nextFloat()*0.05f-0.025f);
-		LM.brightShader.setUniformf("bright", 1f+LM.dice.nextFloat()*0.2f);
+		LM.brightShader.setUniformf("alpha", glowAlpha*0.8f+LM.dice.nextFloat()*0.05f-0.025f + (plunt != null ? plunt.bright-1f : 0f));
+		LM.brightShader.setUniformf("bright", 1f+LM.dice.nextFloat()*0.2f + (plunt != null ? plunt.bright-1f : 0f));
 		
 		if(id == 0)
 			LM.batch.draw(
@@ -110,9 +113,6 @@ public class Pot extends Pickup {
 	}
 	
 	public void drawEffect(){
-		effFac += Tween.tween(effFac, -0.005f, effFac > 0.7f ? 5f : effFac > 0.1f ? 0.3f : 2f);
-		if(effFac < 0 || Tween.atPreciseTarget(effFac, 0f)) effFac = 0f;
-		
 		effMask.bind(1);
 		Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
 		
@@ -153,6 +153,13 @@ public class Pot extends Pickup {
 	}
 
 	public void tick(Level lvl) {
+		bright += Tween.tween(bright, 1f, 1f);
+		
+		if(plunt != null){
+			effFac += Tween.tween(effFac, -0.005f, effFac > 0.7f ? 5f : effFac > 0.1f ? 0.3f : 2f);
+			if(effFac < 0 || Tween.atPreciseTarget(effFac, 0f)) effFac = 0f;
+		}
+		
 		weight = 70;
 		if(st == ONGROUND){
 			if(!onGround) st = INAIR;
@@ -164,6 +171,11 @@ public class Pot extends Pickup {
 		}
 		managePSt(lvl);
 		provideShadow(lvl);
+		
+		if(pos.y < -10000){
+			remove();
+			if(plunt != null) plunt.remove();
+		}
 	}
 	
 	private void land(){
@@ -174,12 +186,17 @@ public class Pot extends Pickup {
 	//Called by plunts when they are planted in this.
 	public void plant(Plunt p){
 		plunt = p;
+		bright = 1.1f;
 	}
 	
 	private void provideShadow(Level lvl){
 		shadow.setSize(202, 88);
 		shadow.setPosition(pos.x+v.x*LM.endTime-62, pos.z+v.z*LM.endTime-30);
 		lvl.addEnt(new ShadowProvider(name+"_SP", dim.x+100, dim.z+100, pos.x-50+v.x*LM.endTime, pos.y+dim.y, pos.z-50+v.z*LM.endTime, shadow));
+	}
+	
+	public void water(){
+		if(plunt != null) plunt.water();
 	}
 	
 	public void drop(Level lvl){
@@ -189,7 +206,7 @@ public class Pot extends Pickup {
 	
 	public void init(Level lvl) {
 		if(cp == null){
-			int id = LM.dice.nextInt(3);
+			int id = LM.dice.nextInt(4);
 			if(id == 0) 
 				cp = new ColProfile(
 					new String[]{"1f1d18", "72262f", "d45945", "e79852", "ffd060", "fff5d8"},
@@ -205,14 +222,17 @@ public class Pot extends Pickup {
 					new String[]{"1f1d18", "2b161e", "702337", "953434", "a97152", "fff4d6"},
 					new float[]{0.20f, 0.35f, 0.51f, 0.70f});
 			
+			if(id == 3) 
+				cp = new ColProfile(
+					new String[]{"1f1d18", "362947", "78846b", "a6bf59", "ebd485", "fff4d6"},
+					new float[]{0.21f, 0.31f, 0.43f, 0.63f});
+			
 			for(Color c : cp.cols){
 				c.r += 0.2f*LM.dice.nextFloat()-0.1f;
 				c.g += 0.2f*LM.dice.nextFloat()-0.1f;
 				c.b+= 0.2f*LM.dice.nextFloat()-0.1f;
-				
 			}
 		}
-		
 		
 		weight = 120;
 	}
@@ -258,7 +278,8 @@ public class Pot extends Pickup {
 	}
 
 	public String getDebug() {
-		return "gSt: "+gSt;
+		return "gSt: "+gSt
+				+"\nPlunt Worth: "+(plunt != null ? plunt.worth : "NO PLUNT");
 	}
 
 }
