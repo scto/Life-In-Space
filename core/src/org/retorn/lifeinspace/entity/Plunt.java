@@ -82,7 +82,6 @@ public class Plunt extends WeakCollider {
 			gFacT = (worth/(float)worthT)*0.63f + 0.1f;
 			gFac += Tween.tween(gFac, gFacT, 3.00f);
 			bright += Tween.tween(bright, 1f, 1f);
-			done();
 		}
 		
 		if(st == DONE){
