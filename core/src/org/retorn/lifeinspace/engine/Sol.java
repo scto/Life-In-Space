@@ -88,6 +88,7 @@ public class Sol extends HardCollider {
 		sideBlankShader.setUniformf("u_size", dim.x, dim.y);
 		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("fOn"), darkFactor);
 		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("u_height"), dim.y);
+		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("baseCol"), c);
 		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("u_texHeight"), drawSide.getRegionHeight());
 		LM.batch.draw(drawSide, pos.x, pos.y+pos.z, dim.x, dim.y);
 		LM.batch.setShader(null);
@@ -114,18 +115,15 @@ public class Sol extends HardCollider {
 		shadowShader.setUniformf(shadowShader.getUniformLocation("ydis"), (projPos.y)/HEIGHT);
 		shadowShader.setUniformf(shadowShader.getUniformLocation("alpha"), 0.5f);
 		LM.batch.draw(drawTop, pos.x, pos.y+pos.z+dim.y, dim.x, dim.z);
-		
-		LM.batch.setShader(sideShadowShader);
-		sideShadowShader.setUniformi("u_texture2", 2);
-		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("baseCol"), c);
-		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("u_size"), new Vector2(dim.x, dim.y));
-		sideShadowShader.setUniformf("u_texSize", tex.getWidth(), tex.getHeight());
-		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("u_screensize"), new Vector2(WIDTH*lvl.getCam().zoom, HEIGHT*lvl.getCam().zoom));
-		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("xdis"), (-projPos.x)/WIDTH);
-		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("ysamp"), 1-projPos.y/HEIGHT);
-		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("fadeFactor"), fadeFactor);
-		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("fOn"), darkFactor);
-		sideShadowShader.setUniformf(sideShadowShader.getUniformLocation("alpha"), 1f);
+
+		LM.batch.setShader(sideBlankShader);
+		sideBlankShader.setUniformi("u_texture2", 2);
+		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("fadeFactor"), fadeFactor);
+		sideBlankShader.setUniformf("u_size", dim.x, dim.y);
+		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("fOn"), darkFactor);
+		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("u_height"), dim.y);
+		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("baseCol"), c);
+		sideBlankShader.setUniformf(sideBlankShader.getUniformLocation("u_texHeight"), drawSide.getRegionHeight());
 		LM.batch.draw(drawSide, pos.x, pos.y+pos.z, dim.x, dim.y);
 		LM.batch.setShader(null);
 		

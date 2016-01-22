@@ -25,7 +25,7 @@ public class CloundTrigger extends Entity {
 	}
 
 	public void collide(Entity b, float collisionTime, Vector3 normal, Level lvl) {
-		if((b instanceof Coin || b instanceof WaterPiece) && !normal.isZero()) cl.trigger(type, lvl);
+		if((b instanceof Coin || (b instanceof WaterPiece && type == 0)) && !normal.isZero()) cl.trigger(type, lvl);
 		
 	}
 

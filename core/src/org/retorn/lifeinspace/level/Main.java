@@ -40,6 +40,8 @@ import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Vector2;
 
+import sun.awt.im.InputMethodManager;
+
 public class Main extends Level{
 	public static float inc;
 	public static float blur = 1f;
@@ -60,9 +62,8 @@ public class Main extends Level{
 	
 	public static boolean inShip = true;
 	public static Vector2 resFac;
-	public static ShaderProgram blurShader, tintShader;
+	public static ShaderProgram tintShader;
 	public static ShaderProgram plantShader;
-	private static ShaderProgram blurVShader, blurHShader;
 	private static FrameBuffer fbo;
 	private static Color tint, tintT;
 	private static ColProfile cp, cpTarg, cpDef, cpDark;
@@ -279,17 +280,6 @@ public class Main extends Level{
 		
 		if(!inShip) manageSols();
 		
-		if(InputManager.pressedR){
-			for(int i = 0; i< 6; i++){
-				LM.addTimer(new RTimer(){public void act(){
-					Pot p = new Pot("pot"+LM.dice.nextFloat(), -1500 + 3000*LM.dice.nextFloat(), 10001, 80);
-					addEnt(new Plunt("plunt"+LM.dice.nextFloat(), p, 1f));
-					addEnt(p);
-				}}, 0.1f*i);
-
-			}
-		}
-		
 	}
 	
 	private void manageCam(){
@@ -342,7 +332,7 @@ public class Main extends Level{
 	public void manageButtons(){
 		if(ButtonSave.pressed) save();
 		
-		if(ButtonShip.pressed){
+		if(ButtonShip.pressed || InputManager.pressedTab){
 			if(!inShip){
 				save();
 				tinc = 0f;
@@ -541,20 +531,9 @@ public class Main extends Level{
 	}
 	
 	private void setUpShaders(){
-		blurShader = new ShaderProgram(Gdx.files.internal("shaders/mBlur.vsh"), Gdx.files.internal("shaders/mBlur.fsh"));
-		outPrint("Blur Shader compiled: " +blurShader.isCompiled() +"\n"+blurShader.getLog());
-		
 		tintShader = new ShaderProgram(Gdx.files.internal("shaders/tint.vsh"), Gdx.files.internal("shaders/tint.fsh"));
 		outPrint("Tint Shader compiled: " +tintShader.isCompiled() +"\n"+tintShader.getLog());
 		tintShader.setUniformf("alpha", 1f);
-		
-		blurVShader = new ShaderProgram(Gdx.files.internal("shaders/BlurV.vsh"), Gdx.files.internal("shaders/BlurU.fsh"));
-		outPrint("BLUR V SHADER COMPILED: "+blurVShader.isCompiled() +blurVShader.getLog());
-		blurVShader.pedantic = false;
-		
-		blurHShader = new ShaderProgram(Gdx.files.internal("shaders/BlurH.vsh"), Gdx.files.internal("shaders/BlurU.fsh"));
-		outPrint("BLUR H SHADER COMPILED: "+blurHShader.isCompiled() +blurHShader.getLog());
-		blurHShader.pedantic = false;
 		
 		plantShader = new ShaderProgram(Gdx.files.internal("shaders/plant.vsh"), Gdx.files.internal("shaders/plant.fsh"));
 		outPrint("PLANT SHADER COMPILED: "+plantShader.isCompiled() +plantShader.getLog());
@@ -681,10 +660,12 @@ public class Main extends Level{
 		for(Pot p : es){
 			if(AABB(p, entity("shiparea"))) q++;
 		}
-		pp.worths = new float[q];
+		pp.worths = new float[q + (entity("coin", Coin.class).heldEnt instanceof Pot ? 1 : 0)];
 		
 		int i = 0;
+		outPrint("");
 		for(Pot p : es){
+			outPrint(p.name +" worth: "+( p.plunt != null ? p.plunt.worth:"NULL"));
 			if(AABB(p, entity("shiparea"))) pp.worths[i] = p.plunt != null ? p.plunt.worth : -1f;
 		}
 		

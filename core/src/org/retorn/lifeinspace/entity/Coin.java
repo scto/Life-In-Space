@@ -80,7 +80,7 @@ public class Coin extends WeakCollider {
 		if(st == ONGROUND){
 			manageDeathPenalty(lvl);
 			manageInput(lvl);
-			if(InputManager.deltaDrag.y > 35*Main.resFac.y)  jump();
+			if(InputManager.deltaDrag.y > 35*Main.resFac.y || InputManager.pressedSpace)  jump();
 			else if(!onGround) st = INAIR;
 			applyGrav(lvl);
 			rollVol = Math.abs(v.x)/1000f;
@@ -203,7 +203,7 @@ public class Coin extends WeakCollider {
 		//IF YOU HAVE A POT PICKUP
 		if(potPickup != null) canPickUp = true;
 			
-		if(ButtonUp.pressed){
+		if(ButtonUp.pressed || InputManager.pressedE){
 			//Manage pick-up/drop
 			//Pick up | Have only potPickup
 				if(potPickup != null && heldEnt == null) pickUp(potPickup, lvl);
@@ -218,7 +218,7 @@ public class Coin extends WeakCollider {
 			}
 		
 		//If there's nothing to be picked up but you have an entity & hit the button.
-		else if(ButtonUp.pressed && heldEnt != null) drop(lvl);
+		else if((ButtonUp.pressed || InputManager.pressedE) && heldEnt != null) drop(lvl);
 	}
 	
 	private void manageInput(Level lvl){
@@ -228,14 +228,15 @@ public class Coin extends WeakCollider {
 		float x = InputManager.M.x/Main.resFac.x;
 		boolean withinBound =( x > 50 && x < LM.WIDTH-50);
 
-		if(InputManager.downLMB && !(!withinBound && !dragging)){
+		if((InputManager.downLMB && !(!withinBound && !dragging)) || (InputManager.downA || InputManager.downD)){
 			dragging = true;
-			float wMX =(InputManager.getWorldMouse(lvl.getCam()).x-getCenterPos().x)*maxV;
+			float wMX = InputManager.downD && !InputManager.downA ? maxV*800 : InputManager.downA && !InputManager.downD ? -maxV*800 : (InputManager.getWorldMouse(lvl.getCam()).x-getCenterPos().x)*maxV;
 			
-			v.x += Tween.tween(v.x, wMX, accel * (!onGround ? 0.1f : 1f));
+			v.x += Tween.tween(v.x, wMX, accel * (!onGround && !(InputManager.downA || InputManager.downD) ? 0.1f : 1f) * (InputManager.downA || InputManager.downD ? 0.3f : 1f));
 		}
 		
 		else v.x += Tween.tween(v.x, 0, accel*0.8f * (!onGround ? 0.2f : 1f));//If mouse is behind
+		
 	}
 	
 	private void manageGravlessInput(Level lvl){
